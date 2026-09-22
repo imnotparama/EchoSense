@@ -7,17 +7,28 @@ export class ExplosionManager {
     this.currentFactor = 0;
 
     // Component explosion vertical lift offsets (in cm)
+    this.liftMap = {
+      oled: 3.5,
+      inmp441: 2.8,
+      esp32: 2.2,
+      rgbLed: 2.5,
+      capacitors: 1.8,
+      transCircuit: 1.8,
+      buzzer: 1.6,
+      vibeMotor: 1.6,
+      breadboard: -0.8
+    };
+
     this.offsets = [
-      { comp: components.oled, liftY: 3.5 },
-      { comp: components.inmp441, liftY: 2.8 },
-      { comp: components.esp32, liftY: 2.2 },
-      { comp: components.rgbLed, liftY: 2.5 },
-      { comp: components.capacitors, liftY: 1.8 },
-      { comp: components.transCircuit, liftY: 1.8 },
-      { comp: components.buzzer, liftY: 1.6 },
-      { comp: components.vibeMotor, liftY: 1.6 },
-      { comp: components.pushButtons, liftY: 1.2 },
-      { comp: components.breadboard, liftY: -0.8 }
+      { key: 'oled', comp: components.oled, liftY: 3.5 },
+      { key: 'inmp441', comp: components.inmp441, liftY: 2.8 },
+      { key: 'esp32', comp: components.esp32, liftY: 2.2 },
+      { key: 'rgbLed', comp: components.rgbLed, liftY: 2.5 },
+      { key: 'capacitors', comp: components.capacitors, liftY: 1.8 },
+      { key: 'transCircuit', comp: components.transCircuit, liftY: 1.8 },
+      { key: 'buzzer', comp: components.buzzer, liftY: 1.6 },
+      { key: 'vibeMotor', comp: components.vibeMotor, liftY: 1.6 },
+      { key: 'breadboard', comp: components.breadboard, liftY: -0.8 }
     ];
 
     // Cache default initial Y positions
@@ -36,6 +47,11 @@ export class ExplosionManager {
         item.comp.group.position.y = item.baseY + item.liftY * this.currentFactor;
       }
     });
+
+    // Dynamically stretch and curve jumper wires so they remain realistically connected
+    if (this.components.wireManager && typeof this.components.wireManager.updateExplosion === 'function') {
+      this.components.wireManager.updateExplosion(this.currentFactor, this.liftMap);
+    }
 
     this.isExploded = this.currentFactor > 0.05;
   }

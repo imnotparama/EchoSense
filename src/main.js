@@ -9,7 +9,6 @@ import { RGBLED } from './components/RGBLED';
 import { VibrationMotor } from './components/VibrationMotor';
 import { Buzzer } from './components/Buzzer';
 import { TransistorCircuit } from './components/TransistorCircuit';
-import { PushButtons } from './components/PushButtons';
 import { OLEDDisplay } from './components/OLEDDisplay';
 import { PhoneCompanion } from './components/PhoneCompanion';
 import { FloatingLabels } from './components/FloatingLabels';
@@ -71,29 +70,23 @@ class EchoSenseApp {
     this.transCircuit = new TransistorCircuit(this.breadboard);
     this.sceneMgr.scene.add(this.transCircuit.group);
 
-    // 9. 4 Tactile Push Buttons (Fire, Doorbell, Baby, Horn)
-    this.pushButtons = new PushButtons(this.breadboard, (buttonId) => {
-      this.triggerAlert(buttonId);
-    });
-    this.sceneMgr.scene.add(this.pushButtons.group);
-
-    // 10. 0.96" SSD1306 OLED Display
+    // 9. 0.96" SSD1306 OLED Display
     this.oled = new OLEDDisplay(this.breadboard);
     this.sceneMgr.scene.add(this.oled.group);
 
-    // 11. 3D Smartphone Companion (BLE Receiver on desk)
+    // 10. 3D Smartphone Companion (BLE Receiver on desk)
     this.phone = new PhoneCompanion();
     this.sceneMgr.scene.add(this.phone.group);
 
-    // 12. Realistic Jumper Wire Routing System (with animated electron flow & inspector)
+    // 11. Realistic Jumper Wire Routing System (with animated electron flow & inspector)
     this.wireManager = new WireManager(this.breadboard);
     this.sceneMgr.scene.add(this.wireManager.group);
 
-    // 13. 3D Floating Engineering Labels with Leader Lines
+    // 12. 3D Floating Engineering Labels with Leader Lines
     this.floatingLabels = new FloatingLabels(this.breadboard, this.sceneMgr.camera);
     this.sceneMgr.scene.add(this.floatingLabels.group);
 
-    // 14. Explosion Manager for SolidWorks style vertical lift
+    // 13. Explosion Manager for SolidWorks style vertical lift
     this.explosionMgr = new ExplosionManager({
       oled: this.oled,
       inmp441: this.inmp441,
@@ -103,14 +96,14 @@ class EchoSenseApp {
       transCircuit: this.transCircuit,
       buzzer: this.buzzer,
       vibeMotor: this.vibeMotor,
-      pushButtons: this.pushButtons,
-      breadboard: this.breadboard
+      breadboard: this.breadboard,
+      wireManager: this.wireManager
     });
 
-    // 15. Cinematic 5-Stage Story Simulator
+    // 14. Cinematic 5-Stage Story Simulator
     this.storySim = new StorySimulator(this);
 
-    // 16. Split-View Interactive Schematic Diagram
+    // 15. Split-View Interactive Schematic Diagram
     this.schematicView = new SchematicView(this);
 
     // Register interactive components for hover tooltips & focus
@@ -123,8 +116,7 @@ class EchoSenseApp {
       this.buzzer.group,
       this.phone.group,
       ...this.capacitors.group.children,
-      ...this.transCircuit.group.children,
-      ...this.pushButtons.group.children
+      ...this.transCircuit.group.children
     ];
 
     this.wireMeshes = this.wireManager.wireRecords.map(w => w.wireMesh);
@@ -165,18 +157,7 @@ class EchoSenseApp {
 
       this.raycaster.setFromCamera(this.mouse, this.sceneMgr.camera);
 
-      // 1. Check push buttons first
-      const clickables = this.pushButtons.getClickableMeshes();
-      const btnIntersects = this.raycaster.intersectObjects(clickables, true);
-      if (btnIntersects.length > 0) {
-        const hit = btnIntersects[0].object;
-        if (hit.userData && hit.userData.id) {
-          this.pushButtons.pressButton(hit.userData.id);
-          return;
-        }
-      }
-
-      // 2. Check jumper wires
+      // 1. Check jumper wires
       const wireIntersects = this.raycaster.intersectObjects(this.wireMeshes, true);
       if (wireIntersects.length > 0) {
         const hitWire = wireIntersects[0].object;

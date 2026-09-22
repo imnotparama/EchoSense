@@ -70,11 +70,11 @@ export class FloatingLabels {
         color: '#3b82f6'
       },
       {
-        text: 'Simulation Push Buttons',
-        sub: 'Fire • Doorbell • Baby • Horn',
-        anchor: new THREE.Vector3(0, this.breadboard.height + 0.4, 1.2),
-        offset: new THREE.Vector3(0, 2.2, 3.0),
-        color: '#ec4899'
+        text: '100µF + 0.1µF Decoupling',
+        sub: 'Audio Rail Noise Suppressors',
+        anchor: new THREE.Vector3(-3.8, this.breadboard.height + 0.8, -1.3),
+        offset: new THREE.Vector3(-4.4, 3.4, -2.4),
+        color: '#06b6d4'
       }
     ];
 
@@ -85,6 +85,7 @@ export class FloatingLabels {
       { text: 'GPIO4 (WS)', pos: this.breadboard.getHolePos({ row: 25, col: 'D' }) },
       { text: 'GPIO5 (SCK)', pos: this.breadboard.getHolePos({ row: 26, col: 'D' }) },
       { text: 'GPIO6 (SD)', pos: this.breadboard.getHolePos({ row: 27, col: 'D' }) },
+      { text: 'GPIO14 (Buzzer)', pos: this.breadboard.getHolePos({ row: 35, col: 'G' }) },
       { text: 'GPIO15 (Red)', pos: this.breadboard.getHolePos({ row: 30, col: 'D' }) },
       { text: 'GPIO16 (Grn)', pos: this.breadboard.getHolePos({ row: 31, col: 'D' }) },
       { text: 'GPIO17 (Blu)', pos: this.breadboard.getHolePos({ row: 32, col: 'D' }) },

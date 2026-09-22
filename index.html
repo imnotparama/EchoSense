@@ -196,9 +196,9 @@
           <span class="net-color-chip teal"></span>
           <span class="net-name">SSD1306 I2C</span>
         </label>
-        <label class="net-item" data-net="buttons">
+        <label class="net-item" data-net="buzzer">
           <span class="net-color-chip purple"></span>
-          <span class="net-name">Tactile Buttons</span>
+          <span class="net-name">Active Buzzer</span>
         </label>
       </div>
 
@@ -257,7 +257,7 @@
     <nav class="alert-dock glass-panel">
       <div class="dock-label-strip">
         <span class="dock-title">SIMULATE SOUND EVENTS & TACTILE PROFILES</span>
-        <span class="dock-hint">Click below or click the 3D push buttons directly on the breadboard</span>
+        <span class="dock-hint">Click below to trigger TinyML acoustic sound classification scenarios</span>
       </div>
       <div class="dock-buttons">
         <button class="alert-trigger-btn fire" id="trigger-fire" data-alert="fire">
@@ -267,7 +267,7 @@
             <span class="alert-name">Fire Alarm</span>
             <span class="alert-action">Red LED Blink + Cont. Vibe</span>
           </div>
-          <span class="btn-key">GPIO 8</span>
+          <span class="btn-key">3.1 kHz</span>
         </button>
 
         <button class="alert-trigger-btn doorbell" id="trigger-doorbell" data-alert="doorbell">
@@ -277,7 +277,7 @@
             <span class="alert-name">Doorbell</span>
             <span class="alert-action">Blue LED + 2 Vibration Pulses</span>
           </div>
-          <span class="btn-key">GPIO 9</span>
+          <span class="btn-key">Chime</span>
         </button>
 
         <button class="alert-trigger-btn baby" id="trigger-baby" data-alert="baby">
@@ -287,7 +287,7 @@
             <span class="alert-name">Baby Cry</span>
             <span class="alert-action">Yellow LED + 3 Short Pulses</span>
           </div>
-          <span class="btn-key">GPIO 10</span>
+          <span class="btn-key">Harmonic</span>
         </button>
 
         <button class="alert-trigger-btn horn" id="trigger-horn" data-alert="horn">
@@ -297,7 +297,7 @@
             <span class="alert-name">Car Horn</span>
             <span class="alert-action">Orange LED + Long Heavy Pulse</span>
           </div>
-          <span class="btn-key">GPIO 11</span>
+          <span class="btn-key">Dual-Tone</span>
         </button>
 
         <button class="alert-trigger-btn reset" id="trigger-reset" data-alert="reset" title="Return to Ambient Listening Mode">
@@ -348,12 +348,12 @@
               </ul>
             </div>
             <div class="schematic-card">
-              <h3>🔘 Physical Input / Trigger Buttons</h3>
+              <h3>🤖 Real-Time Acoustic Detection (TinyML)</h3>
               <ul>
-                <li><strong>Internal Pullups (INPUT_PULLUP):</strong> Buttons connect GPIO8, 9, 10, 11 directly to GND with software debounce.</li>
-                <li><strong>Button 1:</strong> Fire Alarm Simulation (GPIO8)</li>
-                <li><strong>Button 2:</strong> Doorbell Simulation (GPIO9)</li>
-                <li><strong>Button 3:</strong> Baby Cry Simulation (GPIO10)</li>
+                <li><strong>Microphone Stream:</strong> INMP441 captures 24-bit studio audio via I2S, fed directly to ESP32-S3 DMA buffer.</li>
+                <li><strong>On-Device Classifier:</strong> 1D-CNN TinyML model runs locally in 34ms using Xtensa DSP vector instructions.</li>
+                <li><strong>Acoustic Profiles:</strong> Fire alarm (3.1 kHz), Doorbell (chime), Baby cry (harmonic), and Vehicle horn (dual-tone).</li>
+                <li><strong>Simulation Dock:</strong> Bottom triggers provide instant acoustic and tactile response profile verification.</li>
               </ul>
             </div>
           </div>
@@ -368,7 +368,7 @@
           <div>
             <span class="modal-tag">EXPLICIT PIN CONNECTION MATRIX</span>
             <h2 class="modal-title">Hardware Pinout & Breadboard Wiring Map</h2>
-            <p class="modal-subtitle">Exact physical coordinates, signal lines, and jumper wire routing for all 28 circuit connections</p>
+            <p class="modal-subtitle">Exact physical coordinates, signal lines, and jumper wire routing for all 20 circuit connections</p>
           </div>
           <button class="modal-close-btn" id="btn-close-pin-modal">&times;</button>
         </div>
@@ -380,16 +380,16 @@
           </div>
 
           <div class="pin-filter-chips">
-            <button class="pin-filter-chip active" data-filter="all">All (28)</button>
+            <button class="pin-filter-chip active" data-filter="all">All (20)</button>
             <button class="pin-filter-chip" data-filter="power">Power & GND</button>
             <button class="pin-filter-chip" data-filter="i2s">I2S Mic</button>
             <button class="pin-filter-chip" data-filter="i2c">I2C OLED</button>
             <button class="pin-filter-chip" data-filter="motor">Haptic & Driver</button>
             <button class="pin-filter-chip" data-filter="led">RGB Status LED</button>
-            <button class="pin-filter-chip" data-filter="buttons">Buttons</button>
+            <button class="pin-filter-chip" data-filter="buzzer">Buzzer</button>
           </div>
 
-          <span class="pin-total-count" id="pin-total-count">28 Connections</span>
+          <span class="pin-total-count" id="pin-total-count">20 Connections</span>
         </div>
 
         <div class="pin-table-container">

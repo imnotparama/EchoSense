@@ -377,6 +377,19 @@ body, html {
   filter: drop-shadow(0 0 12px #00f0ff) !important;
 }
 
+.schematic-breadcrumb {
+  margin-top: 10px;
+  padding: 8px 12px;
+  background: rgba(0, 240, 255, 0.08);
+  border: 1px solid rgba(0, 240, 255, 0.25);
+  border-radius: 8px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: #38bdf8;
+  line-height: 1.4;
+  text-align: center;
+}
+
 /* Sliders & View Controls */
 .view-controls-box {
   border-top: 1px solid var(--border-glass);

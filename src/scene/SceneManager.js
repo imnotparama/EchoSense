@@ -258,7 +258,14 @@ export class SceneManager {
     });
 
     this.scene.traverse((node) => {
-      if (node.isMesh && node !== this.floor && !node.name.includes('Wire')) {
+      const isWireOrPin =
+        node.name?.includes('Wire') ||
+        node.name?.includes('Jumper') ||
+        node.parent?.name?.includes('Wire') ||
+        node.parent?.name?.includes('Jumper') ||
+        node.userData?.net !== undefined;
+
+      if (node.isMesh && node !== this.floor && !isWireOrPin) {
         if (this.isXRay) {
           if (!this.originalMaterials.has(node)) {
             this.originalMaterials.set(node, node.material);

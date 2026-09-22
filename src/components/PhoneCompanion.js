@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import * as TWEEN from '@tweenjs/tween.js';
 
 export class PhoneCompanion {
   constructor() {
@@ -24,6 +25,12 @@ export class PhoneCompanion {
     this.activeNotification = null;
     this.screenOn = false;
     this.glowIntensity = 0;
+    this.cardAnimY = 370;
+
+    this.baseX = 11.5;
+    this.vibrationTime = 0;
+    this.vibrationDuration = 0;
+    this.vibrationIntensity = 0;
 
     this.init();
   }
@@ -120,6 +127,12 @@ export class PhoneCompanion {
     this.drawScreen();
   }
 
+  triggerVibration(duration = 1.0, intensity = 1.0) {
+    this.vibrationTime = 0;
+    this.vibrationDuration = duration;
+    this.vibrationIntensity = intensity;
+  }
+
   setNotification(type, title, subtitle, confidence = '99.2%') {
     this.activeNotification = {
       type,
@@ -129,7 +142,21 @@ export class PhoneCompanion {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
     this.screenOn = true;
-    this.glowIntensity = 1.0;
+    this.glowIntensity = 1.3;
+    this.triggerVibration(1.2, 1.0);
+
+    // Smooth slide-in animation for incoming push notification
+    this.cardAnimY = 160;
+    const tweenObj = { y: 160 };
+    new TWEEN.Tween(tweenObj)
+      .to({ y: 370 }, 450)
+      .easing(TWEEN.Easing.Back.Out)
+      .onUpdate(() => {
+        this.cardAnimY = tweenObj.y;
+        this.drawScreen();
+      })
+      .start();
+
     this.drawScreen();
   }
 
@@ -137,6 +164,7 @@ export class PhoneCompanion {
     this.activeNotification = null;
     this.screenOn = false;
     this.glowIntensity = 0.2;
+    this.cardAnimY = 370;
     this.drawScreen();
   }
 
@@ -194,7 +222,7 @@ export class PhoneCompanion {
 
     // Push Notification Card (if active)
     if (this.activeNotification) {
-      const cardY = 370;
+      const cardY = this.cardAnimY !== undefined ? this.cardAnimY : 370;
       const cardH = 260;
       const cardW = w - 40;
       const cardX = 20;
@@ -301,6 +329,22 @@ export class PhoneCompanion {
       if (this.screenMaterial) {
         this.screenMaterial.emissiveIntensity = this.glowIntensity;
       }
+    }
+
+    // 3D mechanical vibration oscillation on desk
+    if (this.vibrationTime < this.vibrationDuration) {
+      this.vibrationTime += deltaTime;
+      const progress = this.vibrationTime / this.vibrationDuration;
+      const decay = Math.max(0, 1 - progress);
+      const freq = 55; // 55 Hz tactile motor buzz
+      const xOffset = Math.sin(this.vibrationTime * freq) * 0.05 * this.vibrationIntensity * decay;
+      const rotZOffset = Math.sin(this.vibrationTime * freq * 0.8) * 0.02 * this.vibrationIntensity * decay;
+
+      this.group.position.x = this.baseX + xOffset;
+      this.group.rotation.z = rotZOffset;
+    } else {
+      this.group.position.x = this.baseX;
+      this.group.rotation.z = 0;
     }
   }
 }

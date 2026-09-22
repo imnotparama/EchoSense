@@ -190,8 +190,8 @@ export class OverlayUI {
         { pin: 'GPIO4-6', dest: 'INMP441 Microphone', type: 'Digital I2S Stream' },
         { pin: 'GPIO15-17', dest: '220Ω Resistors → RGB', type: 'PWM Color Drive' },
         { pin: 'GPIO18', dest: '1kΩ → 2N2222 Base', type: 'Motor Switch Signal' },
-        { pin: 'GPIO21-22', dest: 'SSD1306 OLED', type: 'I2C Bus (SDA/SCL)' },
-        { pin: 'GPIO8-11', dest: 'Push Buttons', type: 'INPUT_PULLUP' }
+        { pin: 'GPIO14', dest: 'Active Buzzer (+)', type: 'Acoustic Cue Out' },
+        { pin: 'GPIO21-22', dest: 'SSD1306 OLED', type: 'I2C Bus (SDA/SCL)' }
       ],
       '0.96" I2C OLED Display (SSD1306)': [
         { pin: 'VCC', dest: '3.3V Power Rail', type: '3.3V Logic Power' },
@@ -214,6 +214,10 @@ export class OverlayUI {
         { pin: 'Base', dest: '1kΩ → GPIO18', type: 'Base Drive (2.6mA)' },
         { pin: 'Collector', dest: 'Motor Negative', type: '5V Sinking' },
         { pin: 'Emitter', dest: 'GND Rail', type: 'Reference Ground' }
+      ],
+      'Active Piezo Buzzer': [
+        { pin: 'Positive (+)', dest: 'ESP32 GPIO14', type: 'Digital Drive (5V)' },
+        { pin: 'Negative (-)', dest: 'GND Rail', type: 'Ground Return (0V)' }
       ]
     };
 

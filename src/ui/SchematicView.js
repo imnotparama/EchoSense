@@ -38,36 +38,32 @@ export class SchematicView {
           </defs>
 
           <!-- 1. ESP32-S3 BLOCK -->
-          <g id="sch-esp32" class="sch-node" data-net="esp32">
+          <g id="sch-esp32" class="sch-node" data-net="power">
             <rect x="260" y="80" width="280" height="420" rx="8" fill="url(#chipGrad)" stroke="#38bdf8" stroke-width="2"/>
             <text x="400" y="115" fill="#f8fafc" font-size="18" font-family="monospace" font-weight="bold" text-anchor="middle">ESP32-S3 DevKitC-1</text>
             <text x="400" y="135" fill="#94a3b8" font-size="12" font-family="sans-serif" text-anchor="middle">Xtensa Dual-Core 240MHz • TinyML DSP</text>
 
-            <!-- LEFT PINS (I2S, Power, Buttons) -->
-            <g class="sch-pin" data-pin="inmp_ws"><rect x="230" y="170" width="30" height="20" rx="3" fill="#10b981"/><text x="220" y="185" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GPIO4 (WS)</text></g>
-            <g class="sch-pin" data-pin="inmp_sck"><rect x="230" y="205" width="30" height="20" rx="3" fill="#10b981"/><text x="220" y="220" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GPIO5 (SCK)</text></g>
-            <g class="sch-pin" data-pin="inmp_sd"><rect x="230" y="240" width="30" height="20" rx="3" fill="#10b981"/><text x="220" y="255" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GPIO6 (SD)</text></g>
+            <!-- LEFT PINS (I2S & Power) -->
+            <g class="sch-pin" data-pin="i2s"><rect x="230" y="170" width="30" height="20" rx="3" fill="#10b981"/><text x="220" y="185" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GPIO4 (WS)</text></g>
+            <g class="sch-pin" data-pin="i2s"><rect x="230" y="210" width="30" height="20" rx="3" fill="#10b981"/><text x="220" y="225" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GPIO5 (SCK)</text></g>
+            <g class="sch-pin" data-pin="i2s"><rect x="230" y="250" width="30" height="20" rx="3" fill="#10b981"/><text x="220" y="265" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GPIO6 (SD)</text></g>
 
-            <g class="sch-pin" data-pin="gpio8"><rect x="230" y="285" width="30" height="20" rx="3" fill="#a855f7"/><text x="220" y="300" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GPIO8 (Fire)</text></g>
-            <g class="sch-pin" data-pin="gpio9"><rect x="230" y="320" width="30" height="20" rx="3" fill="#a855f7"/><text x="220" y="335" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GPIO9 (Bell)</text></g>
-            <g class="sch-pin" data-pin="gpio10"><rect x="230" y="355" width="30" height="20" rx="3" fill="#a855f7"/><text x="220" y="370" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GPIO10 (Baby)</text></g>
-            <g class="sch-pin" data-pin="gpio11"><rect x="230" y="390" width="30" height="20" rx="3" fill="#a855f7"/><text x="220" y="405" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GPIO11 (Horn)</text></g>
-
-            <g class="sch-pin" data-pin="pwr_3v3"><rect x="230" y="435" width="30" height="20" rx="3" fill="#ef4444"/><text x="220" y="450" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">3.3V Out</text></g>
-            <g class="sch-pin" data-pin="gnd_top"><rect x="230" y="465" width="30" height="20" rx="3" fill="#475569"/><text x="220" y="480" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GND</text></g>
+            <g class="sch-pin" data-pin="power"><rect x="230" y="340" width="30" height="20" rx="3" fill="#ef4444"/><text x="220" y="355" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">3.3V Out</text></g>
+            <g class="sch-pin" data-pin="power"><rect x="230" y="380" width="30" height="20" rx="3" fill="#475569"/><text x="220" y="395" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">GND Bus</text></g>
+            <g class="sch-pin" data-pin="power"><rect x="230" y="420" width="30" height="20" rx="3" fill="#06b6d4"/><text x="220" y="435" fill="#ffffff" font-size="11" font-family="monospace" text-anchor="end">100µF/0.1µF</text></g>
 
             <!-- RIGHT PINS (LED, Motor, I2C, Buzzer, 5V) -->
-            <g class="sch-pin" data-pin="led_red"><rect x="540" y="170" width="30" height="20" rx="3" fill="#3b82f6"/><text x="580" y="185" fill="#ffffff" font-size="11" font-family="monospace">GPIO15 (LED-R)</text></g>
-            <g class="sch-pin" data-pin="led_grn"><rect x="540" y="205" width="30" height="20" rx="3" fill="#3b82f6"/><text x="580" y="220" fill="#ffffff" font-size="11" font-family="monospace">GPIO16 (LED-G)</text></g>
-            <g class="sch-pin" data-pin="led_blu"><rect x="540" y="240" width="30" height="20" rx="3" fill="#3b82f6"/><text x="580" y="255" fill="#ffffff" font-size="11" font-family="monospace">GPIO17 (LED-B)</text></g>
+            <g class="sch-pin" data-pin="led"><rect x="540" y="170" width="30" height="20" rx="3" fill="#f43f5e"/><text x="580" y="185" fill="#ffffff" font-size="11" font-family="monospace">GPIO15 (LED-R)</text></g>
+            <g class="sch-pin" data-pin="led"><rect x="540" y="205" width="30" height="20" rx="3" fill="#10b981"/><text x="580" y="220" fill="#ffffff" font-size="11" font-family="monospace">GPIO16 (LED-G)</text></g>
+            <g class="sch-pin" data-pin="led"><rect x="540" y="240" width="30" height="20" rx="3" fill="#3b82f6"/><text x="580" y="255" fill="#ffffff" font-size="11" font-family="monospace">GPIO17 (LED-B)</text></g>
 
             <g class="sch-pin" data-pin="gpio18"><rect x="540" y="285" width="30" height="20" rx="3" fill="#eab308"/><text x="580" y="300" fill="#ffffff" font-size="11" font-family="monospace">GPIO18 (Motor)</text></g>
             <g class="sch-pin" data-pin="buzzer"><rect x="540" y="325" width="30" height="20" rx="3" fill="#3b82f6"/><text x="580" y="340" fill="#ffffff" font-size="11" font-family="monospace">GPIO14 (Buzzer)</text></g>
 
-            <g class="sch-pin" data-pin="i2c_sda"><rect x="540" y="370" width="30" height="20" rx="3" fill="#14b8a6"/><text x="580" y="385" fill="#ffffff" font-size="11" font-family="monospace">GPIO21 (SDA)</text></g>
-            <g class="sch-pin" data-pin="i2c_scl"><rect x="540" y="405" width="30" height="20" rx="3" fill="#14b8a6"/><text x="580" y="420" fill="#ffffff" font-size="11" font-family="monospace">GPIO22 (SCL)</text></g>
+            <g class="sch-pin" data-pin="i2c"><rect x="540" y="370" width="30" height="20" rx="3" fill="#14b8a6"/><text x="580" y="385" fill="#ffffff" font-size="11" font-family="monospace">GPIO21 (SDA)</text></g>
+            <g class="sch-pin" data-pin="i2c"><rect x="540" y="405" width="30" height="20" rx="3" fill="#14b8a6"/><text x="580" y="420" fill="#ffffff" font-size="11" font-family="monospace">GPIO22 (SCL)</text></g>
 
-            <g class="sch-pin" data-pin="pwr_5v"><rect x="540" y="450" width="30" height="20" rx="3" fill="#ef4444"/><text x="580" y="465" fill="#ffffff" font-size="11" font-family="monospace">5V (VBUS)</text></g>
+            <g class="sch-pin" data-pin="power"><rect x="540" y="450" width="30" height="20" rx="3" fill="#ef4444"/><text x="580" y="465" fill="#ffffff" font-size="11" font-family="monospace">5V (VBUS)</text></g>
           </g>
 
           <!-- 2. INMP441 MICROPHONE BLOCK (Left) -->
@@ -78,8 +74,8 @@ export class SchematicView {
             <circle cx="105" cy="235" r="14" fill="#d4af37"/>
             <!-- Connecting wires -->
             <path d="M 170 180 L 230 180" stroke="#10b981" stroke-width="2"/>
-            <path d="M 170 215 L 230 215" stroke="#10b981" stroke-width="2"/>
-            <path d="M 170 250 L 230 250" stroke="#10b981" stroke-width="2"/>
+            <path d="M 170 220 L 230 220" stroke="#10b981" stroke-width="2"/>
+            <path d="M 170 260 L 230 260" stroke="#10b981" stroke-width="2"/>
           </g>
 
           <!-- 3. MOTOR DRIVER (2N2222 + Motor + Diode) (Right) -->
@@ -116,6 +112,9 @@ export class SchematicView {
           </g>
         </svg>
       </div>
+      <div class="schematic-breadcrumb" id="sch-breadcrumb">
+        <span>Click any schematic symbol or pin to isolate circuit & trace in 3D</span>
+      </div>
     `;
   }
 
@@ -134,9 +133,34 @@ export class SchematicView {
           // Visual highlight in SVG
           this.container.querySelectorAll('.sch-pin, .sch-node').forEach(n => n.classList.remove('active-sch'));
           node.classList.add('active-sch');
+
+          // Update breadcrumb text
+          const breadcrumbEl = document.getElementById('sch-breadcrumb');
+          if (breadcrumbEl) {
+            const pathDesc = this.app.wireManager.getSignalPath(pinKey);
+            breadcrumbEl.innerHTML = `<strong>Signal Path:</strong> ${pathDesc}`;
+          }
         }
       });
     });
+  }
+
+  highlightNode(key) {
+    if (!this.isOpen) return;
+    this.container.querySelectorAll('.sch-pin, .sch-node').forEach(n => {
+      const match = n.getAttribute('data-pin') === key || n.getAttribute('data-net') === key;
+      if (match) {
+        n.classList.add('active-sch');
+      } else {
+        n.classList.remove('active-sch');
+      }
+    });
+
+    const breadcrumbEl = document.getElementById('sch-breadcrumb');
+    if (breadcrumbEl) {
+      const pathDesc = this.app.wireManager.getSignalPath(key);
+      breadcrumbEl.innerHTML = `<strong>Signal Path:</strong> ${pathDesc}`;
+    }
   }
 
   toggle(visible) {

@@ -44,7 +44,6 @@ Environmental sounds—such as emergency fire alarms, doorbells, crying infants,
 | **1N4148 Fast Flyback Diode** | Clamps inductive voltage spikes across motor terminals to protect transistor | Reverse-biased across motor +/- | Across Motor |
 | **Common Cathode RGB LED** | Multi-color optical status indicator with 3× 220Ω current limiting resistors | 3× PWM channels (GPIO15, 16, 17) | 3.3V / GND |
 | **Active Piezo Buzzer** | Developer auditory cue for debugging & dual verification | Switched via GPIO14 | 5V / GND |
-| **4× Tactile Push Buttons** | Physical hardware trigger simulation (Internal `INPUT_PULLUP`) | GPIO8, 9, 10, 11 to GND | GND |
 | **Decoupling Capacitors** | 100µF Electrolytic + 0.1µF Ceramic noise decoupling directly on mic rail | Parallel bypass filtering | 3.3V to GND |
 | **MB-102 Breadboard** | 830 tie-point prototyping platform with split power rails | Terminal strips & power buses | 5V / 3.3V / GND |
 
@@ -68,14 +67,12 @@ graph TD
         ESP32 -->|GPIO18 Base Drive| BJT[2N2222 NPN Transistor]
         BJT -->|Low-Side Sink| VIBE_PWR
         ESP32 -->|PWM: GPIO15/16/17| LED
+        ESP32 -->|GPIO14 Drive| BUZZ_PWR
         ESP32 -->|BLE 5.0 Radio| PHONE[Smartphone Companion App]
     end
 
-    subgraph Simulation Triggers
-        BTN1[Fire Button: GPIO8] --> ESP32
-        BTN2[Doorbell Button: GPIO9] --> ESP32
-        BTN3[Baby Cry Button: GPIO10] --> ESP32
-        BTN4[Car Horn Button: GPIO11] --> ESP32
+    subgraph Simulated Acoustic Scenarios
+        DOCK[Interactive Simulation Dock] -->|Acoustic Event Trigger| ESP32
     end
 ```
 
@@ -83,14 +80,14 @@ graph TD
 
 ## 🔌 Complete Pinout & Wiring Matrix
 
-Every single one of the **28 jumper wire connections** is explicitly mapped to physical breadboard hole coordinates:
+Every single one of the **20 jumper wire connections** is explicitly mapped to physical breadboard hole coordinates:
 
 | Wire Color | Source Pin | Breadboard Hole | ➔ | Target Pin | Breadboard Hole | Signal / Function |
 |:---:|---|---|:---:|---|---|---|
 | 🔴 Red | **ESP32 3V3** | `Row 21, Col E` | ➔ | **Top + Rail** | `+ Rail, Pin 21` | Supplies regulated 3.3V power to mic and OLED |
 | ⚫ Black | **ESP32 GND** | `Row 22, Col E` | ➔ | **Top - Rail** | `- Rail, Pin 22` | Common ground return path |
-| 🔴 Red | **ESP32 5V** | `Row 42, Col G` | ➔ | **Bottom + Rail** | `+ Rail, Pin 42` | Supplies 5V USB power for vibration motor |
-| ⚫ Black | **ESP32 GND** | `Row 41, Col G` | ➔ | **Bottom - Rail** | `- Rail, Pin 41` | High-current ground return path for motor |
+| 🔴 Red | **ESP32 5V** | `Row 42, Col F` | ➔ | **Bottom + Rail** | `+ Rail, Pin 42` | Supplies 5V USB power for vibration motor |
+| ⚫ Black | **ESP32 GND** | `Row 22, Col F` | ➔ | **Bottom - Rail** | `- Rail, Pin 22` | High-current ground return path for motor |
 | 🔴 Red | **INMP441 VDD** | `Row 8, Col A` | ➔ | **Top + Rail** | `+ Rail, Pin 8` | 3.3V power input for MEMS microphone |
 | ⚫ Black | **INMP441 GND** | `Row 9, Col A` | ➔ | **Top - Rail** | `- Rail, Pin 9` | Audio sensor ground reference |
 | ⚫ Black | **INMP441 L/R** | `Row 13, Col A` | ➔ | **Top - Rail** | `- Rail, Pin 13` | Tied to GND for Left channel I2S mode |
@@ -103,22 +100,10 @@ Every single one of the **28 jumper wire connections** is explicitly mapped to p
 | 🌐 Teal | **OLED SCL** | `Row 39, Col B` | ➔ | **ESP32 GPIO22** | `Row 39, Col D` | I2C Serial Clock line (400kHz Fast-mode) |
 | 🔴 Red | **Motor + & Diode** | `Row 55, Col D` | ➔ | **Bottom + Rail** | `+ Rail, Pin 55` | 5V power supply to vibration motor |
 | 🟡 Yellow | **Motor - & Diode** | `Row 56, Col D` | ➔ | **2N2222 Collector** | `Row 57, Col E` | Low-side switched return through transistor |
-| 🟡 Yellow | **ESP32 GPIO18** | `Row 34, Col G` | ➔ | **1kΩ Base Resistor**| `Row 56, Col E` | MCU digital drive to transistor base |
 | ⚫ Black | **2N2222 Emitter** | `Row 58, Col E` | ➔ | **Bottom - Rail** | `- Rail, Pin 58` | Transistor emitter ground reference |
 | ⚫ Black | **RGB LED Cathode** | `Row 47, Col B` | ➔ | **Top - Rail** | `- Rail, Pin 47` | Common cathode ground return |
-| 🔵 Blue | **ESP32 GPIO15** | `Row 30, Col D` | ➔ | **220Ω Red Resistor**| `Row 46, Col A` | PWM red channel drive |
-| 🔵 Blue | **ESP32 GPIO16** | `Row 31, Col D` | ➔ | **220Ω Grn Resistor**| `Row 48, Col A` | PWM green channel drive |
-| 🔵 Blue | **ESP32 GPIO17** | `Row 32, Col D` | ➔ | **220Ω Blu Resistor**| `Row 49, Col A` | PWM blue channel drive |
 | 🔵 Blue | **Active Buzzer +** | `Row 51, Col H` | ➔ | **ESP32 GPIO14** | `Row 35, Col G` | Digital drive line for audio debugging |
 | ⚫ Black | **Active Buzzer -** | `Row 52, Col H` | ➔ | **Bottom - Rail** | `- Rail, Pin 52` | Buzzer ground reference |
-| 🟣 Purple| **Fire Button** | `Row 14, Col H` | ➔ | **ESP32 GPIO8** | `Row 25, Col G` | INPUT_PULLUP: triggers Fire Alarm profile |
-| ⚫ Black | **Fire Button GND**| `Row 12, Col H` | ➔ | **Bottom - Rail** | `- Rail, Pin 12` | Ground reference for Fire button |
-| 🟣 Purple| **Doorbell Button**| `Row 20, Col H` | ➔ | **ESP32 GPIO9** | `Row 26, Col G` | INPUT_PULLUP: triggers Doorbell profile |
-| ⚫ Black | **Doorbell GND** | `Row 18, Col H` | ➔ | **Bottom - Rail** | `- Rail, Pin 18` | Ground reference for Doorbell button |
-| 🟣 Purple| **Baby Button** | `Row 46, Col H` | ➔ | **ESP32 GPIO10** | `Row 27, Col G` | INPUT_PULLUP: triggers Baby Cry profile |
-| ⚫ Black | **Baby Button GND** | `Row 44, Col H` | ➔ | **Bottom - Rail** | `- Rail, Pin 44` | Ground reference for Baby button |
-| 🟣 Purple| **Car Horn Button** | `Row 52, Col H` | ➔ | **ESP32 GPIO11** | `Row 28, Col G` | INPUT_PULLUP: triggers Car Horn profile |
-| ⚫ Black | **Car Horn GND** | `Row 50, Col H` | ➔ | **Bottom - Rail** | `- Rail, Pin 50` | Ground reference for Car Horn button |
 
 ---
 
@@ -129,7 +114,7 @@ Every single one of the **28 jumper wire connections** is explicitly mapped to p
   - High-resolution breadboard silkscreen with black row numbers across center troughs and outer borders, column letters, individual hole guides, and polarity lines.
   - ESP32-S3 DevKitC-1 silkscreen with colored pin badges matching each circuit net directly on the PCB.
 - **🔌 Interactive Pin Connections Matrix**:
-  - Dedicated search and filtering modal listing all 28 pin connections.
+  - Dedicated search and filtering modal listing all 20 pin connections.
   - One-click **`🔍 Inspect in 3D`** smoothly flies the camera into a close-up angle centered on the two pins, spawns animated 3D pulsing target beacons (Cyan & Amber) directly in the breadboard holes, dims unrelated wires, and displays an on-screen HUD banner.
 - **SolidWorks-Style Exploded View**: Smoothly elevates all components vertically (0% to 100%) so every wire entry and header pin can be inspected in full assembly clarity.
 - **Animated Electron Current Flow**: Instanced 3D glowing particle streams traverse along each jumper wire curve at physically representative speeds.
