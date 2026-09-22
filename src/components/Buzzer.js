@@ -65,6 +65,11 @@ export class Buzzer {
     ctx.fillText('BUZZER', 128, 190);
 
     const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.generateMipmaps = false;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.anisotropy = 16;
     const topGeo = new THREE.CircleGeometry(radius * 0.95, 32);
     const topMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.5 });
     const topCap = new THREE.Mesh(topGeo, topMat);

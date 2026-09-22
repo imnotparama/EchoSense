@@ -70,6 +70,11 @@ export class Capacitors {
     ctx.fillText('16V', 90, 150);
 
     const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.anisotropy = 16;
     const bodyMat = new THREE.MeshStandardMaterial({
       map: texture,
       roughness: 0.35,

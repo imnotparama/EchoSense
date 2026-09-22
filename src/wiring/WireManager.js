@@ -637,12 +637,14 @@ export class WireManager {
         w.material.opacity = 1.0;
         w.material.transparent = false;
         w.material.emissive.setHex(0x000000);
+        w.group.children.forEach(c => c.visible = true);
       } else {
         w.group.visible = true;
-        w.material.color.setHex(0x334155);
-        w.material.opacity = 0.15;
+        w.material.color.setHex(0x1e293b);
+        w.material.opacity = 0.12;
         w.material.transparent = true;
         w.material.emissive.setHex(0x000000);
+        w.group.children.forEach(c => { if (c !== w.wireMesh) c.visible = false; });
       }
     });
   }
@@ -674,12 +676,14 @@ export class WireManager {
         w.material.emissiveIntensity = 0.8;
         w.material.opacity = 1.0;
         w.material.transparent = false;
+        w.group.children.forEach(c => c.visible = true);
       } else {
         w.group.visible = true;
         w.material.color.setHex(0x1e293b);
         w.material.opacity = 0.12;
         w.material.transparent = true;
         w.material.emissive.setHex(0x000000);
+        w.group.children.forEach(c => { if (c !== w.wireMesh) c.visible = false; });
       }
     });
   }
@@ -708,12 +712,14 @@ export class WireManager {
         w.material.emissiveIntensity = 1.2;
         w.material.opacity = 1.0;
         w.material.transparent = false;
+        w.group.children.forEach(c => c.visible = true);
       } else {
         w.group.visible = true;
         w.material.color.setHex(0x1e293b);
         w.material.opacity = 0.12;
         w.material.transparent = true;
         w.material.emissive.setHex(0x000000);
+        w.group.children.forEach(c => { if (c !== w.wireMesh) c.visible = false; });
       }
     });
 

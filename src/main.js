@@ -143,9 +143,25 @@ class EchoSenseApp {
       this.checkHover(event.clientX, event.clientY);
     });
 
-    // Single click for 3D buttons, wires, & opening component details drawer
+    let downX = 0;
+    let downY = 0;
+    let downTime = 0;
+
     window.addEventListener('pointerdown', (event) => {
       if (event.button !== 0 || event.target !== this.canvas) return;
+      downX = event.clientX;
+      downY = event.clientY;
+      downTime = performance.now();
+    });
+
+    // Single click for 3D buttons, wires, & opening component details drawer (only if not dragging camera)
+    window.addEventListener('pointerup', (event) => {
+      if (event.button !== 0 || event.target !== this.canvas) return;
+
+      const dist = Math.hypot(event.clientX - downX, event.clientY - downY);
+      const elapsed = performance.now() - downTime;
+      // If user dragged to rotate camera or held down, do not trigger click
+      if (dist > 6 || elapsed > 350) return;
 
       this.raycaster.setFromCamera(this.mouse, this.sceneMgr.camera);
 

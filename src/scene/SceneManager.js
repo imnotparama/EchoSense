@@ -136,6 +136,11 @@ export class SceneManager {
     ctx.fillRect(0, 0, 1024, 1024);
 
     const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.anisotropy = 16;
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     texture.repeat.set(2, 2);
@@ -222,12 +227,15 @@ export class SceneManager {
   }
 
   smoothTransition(newPos, newTarget, duration = 1000) {
-    new TWEEN.Tween(this.camera.position)
+    if (this.currentCameraTween) this.currentCameraTween.stop();
+    if (this.currentTargetTween) this.currentTargetTween.stop();
+
+    this.currentCameraTween = new TWEEN.Tween(this.camera.position)
       .to(newPos, duration)
       .easing(TWEEN.Easing.Cubic.Out)
       .start();
 
-    new TWEEN.Tween(this.controls.target)
+    this.currentTargetTween = new TWEEN.Tween(this.controls.target)
       .to(newTarget, duration)
       .easing(TWEEN.Easing.Cubic.Out)
       .onUpdate(() => this.controls.update())

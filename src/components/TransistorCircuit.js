@@ -84,6 +84,11 @@ export class TransistorCircuit {
     ctx.fillText('NPN BJT', 128, 190);
 
     const tex = new THREE.CanvasTexture(canvas);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    tex.generateMipmaps = false;
+    tex.minFilter = THREE.LinearFilter;
+    tex.magFilter = THREE.LinearFilter;
+    tex.anisotropy = 16;
     const labelGeo = new THREE.PlaneGeometry(0.42, 0.42);
     const labelMat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.4 });
     const label = new THREE.Mesh(labelGeo, labelMat);

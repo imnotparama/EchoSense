@@ -68,10 +68,10 @@ export class INMP441 {
     this.group.position.set(centerX, yPos, centerZ);
     this.group.add(pcb);
 
-    // Silkscreen
+    // Silkscreen (2048x1536 ultra-sharp)
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 384;
+    canvas.width = 2048;
+    canvas.height = 1536;
     const ctx = canvas.getContext('2d');
 
     ctx.fillStyle = '#4a154b';
@@ -79,28 +79,50 @@ export class INMP441 {
 
     // Gold borders and text
     ctx.fillStyle = '#f8fafc';
-    ctx.font = 'bold 24px monospace';
+    ctx.font = 'bold 110px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('INMP441', canvas.width / 2, 60);
+    ctx.fillText('INMP441', canvas.width / 2, 260);
 
-    ctx.font = '16px monospace';
-    ctx.fillStyle = '#e2e8f0';
-    ctx.fillText('I2S MIC', canvas.width / 2, 85);
+    ctx.font = 'bold 64px monospace';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('I2S MEMS MIC', canvas.width / 2, 380);
 
-    // Pin labels along bottom edge
-    const pinNames = ['VDD', 'GND', 'SD', 'WS', 'SCK', 'L/R'];
-    ctx.font = 'bold 15px monospace';
-    ctx.fillStyle = '#cbd5e1';
-    const startPinX = 55;
-    const pinSpacing = (canvas.width - 110) / 5;
+    // Pin labels along bottom edge with high-contrast colored badges
+    const pinConfigs = [
+      { name: 'VDD', color: '#ef4444' },
+      { name: 'GND', color: '#64748b' },
+      { name: 'SD', color: '#10b981' },
+      { name: 'WS', color: '#10b981' },
+      { name: 'SCK', color: '#10b981' },
+      { name: 'L/R', color: '#64748b' }
+    ];
 
-    pinNames.forEach((name, i) => {
-      ctx.fillText(name, startPinX + i * pinSpacing, canvas.height - 25);
+    const startPinX = 200;
+    const pinSpacing = (canvas.width - 400) / (pinConfigs.length - 1);
+
+    pinConfigs.forEach((conf, i) => {
+      const x = startPinX + i * pinSpacing;
+      // Badge background
+      ctx.fillStyle = conf.color;
+      ctx.beginPath();
+      ctx.roundRect(x - 90, canvas.height - 240, 180, 120, 20);
+      ctx.fill();
+
+      // Pin label
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 64px monospace';
+      ctx.fillText(conf.name, x, canvas.height - 155);
     });
 
     const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.anisotropy = 16;
+
     const silkGeo = new THREE.PlaneGeometry(length - 0.05, width - 0.05);
-    const silkMat = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.4 });
+    const silkMat = new THREE.MeshStandardMaterial({ map: texture, roughness: 0.35, metalness: 0.1 });
     const silk = new THREE.Mesh(silkGeo, silkMat);
     silk.rotation.x = -Math.PI / 2;
     silk.position.y = height / 2 + 0.005;

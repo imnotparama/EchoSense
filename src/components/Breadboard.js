@@ -57,8 +57,7 @@ export class Breadboard {
     };
 
     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
-    geometry.rotateX(Math.PI / 2); // Lay flat on XZ plane
-    geometry.translate(0, this.height / 2, 0);
+    geometry.rotateX(-Math.PI / 2); // Extrude upwards from Y=0 to Y=this.height
 
     const material = new THREE.MeshStandardMaterial({
       color: 0xf4f1ea,

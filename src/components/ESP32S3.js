@@ -212,24 +212,29 @@ export class ESP32S3 {
 
     // Engraved text on RF shield
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
+    canvas.width = 1024;
+    canvas.height = 1024;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#d4d4d8';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#3f3f46';
-    ctx.font = 'bold 36px monospace';
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 72px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('ESP32-S3', 256, 160);
-    ctx.font = 'bold 26px monospace';
-    ctx.fillText('WROOM-1', 256, 205);
+    ctx.fillText('ESP32-S3', 512, 320);
+    ctx.font = 'bold 52px monospace';
+    ctx.fillText('WROOM-1', 512, 410);
 
-    ctx.font = '18px monospace';
-    ctx.fillText('FCC ID: 2AC7Z-ESPS3WROOM1', 256, 270);
-    ctx.fillText('CE • RoHS • 16MB FLASH', 256, 305);
+    ctx.font = '36px monospace';
+    ctx.fillText('FCC ID: 2AC7Z-ESPS3WROOM1', 512, 540);
+    ctx.fillText('CE • RoHS • 16MB FLASH', 512, 610);
 
     const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.anisotropy = 16;
     const labelGeo = new THREE.PlaneGeometry(canLength - 0.1, canWidth - 0.1);
     const labelMat = new THREE.MeshStandardMaterial({
       map: texture,
