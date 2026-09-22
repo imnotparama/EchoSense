@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EchoSense 3D — AI Environmental Sound Awareness System</title>
+  <meta name="description" content="Photorealistic interactive 3D electronics prototype of an AI-powered assistive device for people with hearing disabilities using ESP32-S3, INMP441, OLED, and haptic motor." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/src/styles/index.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- WebGL 3D Canvas -->
+    <canvas id="webgl-canvas"></canvas>
+
+    <!-- Header Overlay -->
+    <header class="app-header glass-panel">
+      <div class="header-left">
+        <div class="brand-badge">
+          <span class="status-indicator live-pulse"></span>
+          <span class="brand-name">ECHOSENSE AI</span>
+          <span class="version-tag">v1.2 PROTOTYPE</span>
+        </div>
+        <h1 class="project-title">AI-Based Environmental Sound Awareness System</h1>
+        <p class="project-subtitle">ESP32-S3 + INMP441 + TinyML + Haptic Feedback Prototype</p>
+      </div>
+
+      <div class="header-right">
+        <div class="device-status-badge" id="device-status-badge">
+          <span class="status-dot green"></span>
+          <span class="status-text" id="status-text">ESP32-S3: LISTENING...</span>
+        </div>
+        <button class="icon-button primary-btn" id="btn-story-sim" title="Play Cinematic 5-Stage Story Simulation">
+          <span>🎬 Play Story Simulation</span>
+        </button>
+        <button class="icon-button" id="btn-schematic-toggle" title="Toggle Split-View Interactive Schematic">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+          <span>Schematic</span>
+        </button>
+        <button class="icon-button" id="btn-xray-toggle" title="Toggle X-Ray Transparency">
+          <span>X-Ray</span>
+        </button>
+        <button class="icon-button" id="btn-labels-toggle" title="Toggle 3D Floating Callouts">
+          <span>Labels</span>
+        </button>
+        <button class="icon-button" id="btn-clean-view" title="Toggle Clean View (Hide Overlays)">
+          <span>Clean View</span>
+        </button>
+        <button class="icon-button" id="btn-audio-toggle" title="Toggle Simulation Audio">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path id="audio-icon-path" d="M11 5L6 9H2v6h4l5 4V5z M19.07 4.93a10 10 0 0 1 0 14.14 M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+          <span id="audio-btn-label">Sound: ON</span>
+        </button>
+        <button class="icon-button primary-btn" id="btn-pin-map" title="Interactive Pin Connections Matrix & Wiring Map">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+          </svg>
+          <span>🔌 Pinout Matrix</span>
+        </button>
+        <button class="icon-button" id="btn-pinout-modal" title="View Hardware Pinout & Schematics">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="4" y="4" width="16" height="16" rx="2" />
+            <path d="M9 9h6v6H9z" />
+            <path d="M9 1v3M15 1v3M9 20v3M15 20v3M20 9h3M20 15h3M1 9h3M1 15h3" />
+          </svg>
+          <span>Architecture</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Component Details Slide-Out Drawer (Right) -->
+    <aside id="component-drawer" class="component-drawer glass-panel hidden">
+      <div class="drawer-header">
+        <div>
+          <span class="drawer-tag" id="drawer-cat">AUDIO SENSOR</span>
+          <h2 class="drawer-title" id="drawer-title">INMP441 I2S Microphone</h2>
+        </div>
+        <button class="drawer-close-btn" id="btn-close-drawer">&times;</button>
+      </div>
+      <div class="drawer-body">
+        <p class="drawer-desc" id="drawer-desc">Description</p>
+        <div class="drawer-section">
+          <h4 class="drawer-sec-title">ASSISTIVE ROLE</h4>
+          <p class="drawer-subtext" id="drawer-role">Acoustic capture for deaf awareness.</p>
+        </div>
+        <div class="drawer-section">
+          <h4 class="drawer-sec-title">PIN CONNECTIONS</h4>
+          <div id="drawer-connections" class="drawer-conn-table">
+            <!-- Dynamically populated -->
+          </div>
+        </div>
+        <div class="drawer-actions">
+          <button class="primary-btn drawer-btn" id="btn-drawer-focus">Focus Camera</button>
+          <button class="icon-button drawer-btn" id="btn-drawer-isolate">Isolate Circuit</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Guided Story Simulation Banner (Top Center) -->
+    <div id="story-banner" class="story-banner glass-panel hidden">
+      <div class="story-spinner"></div>
+      <div class="story-text">
+        <h3 id="story-stage-title">Stage 1/5: INMP441 Acoustic Sound Wave Capture</h3>
+        <p id="story-stage-desc">Environmental sound waves travel through the air into the INMP441 MEMS acoustic port.</p>
+      </div>
+      <button class="story-close-btn" id="btn-stop-story">&times;</button>
+    </div>
+
+    <!-- Split-View Interactive Schematic Container (Right) -->
+    <aside id="schematic-split-container" class="schematic-split-panel glass-panel hidden">
+      <!-- Injected by SchematicView.js -->
+    </aside>
+
+    <!-- Floating Component Info Tooltip (3D Raycaster Target) -->
+    <div id="component-tooltip" class="component-tooltip glass-card hidden">
+      <div class="tooltip-header">
+        <span class="tooltip-tag" id="tooltip-category">MICROCONTROLLER</span>
+        <h3 class="tooltip-title" id="tooltip-title">ESP32-S3 DevKitC-1</h3>
+      </div>
+      <p class="tooltip-desc" id="tooltip-desc">
+        Dual-core Xtensa LX7 @ 240MHz with vector instructions for on-device TinyML audio inference.
+      </p>
+      <div class="tooltip-specs" id="tooltip-specs">
+        <!-- Dynamically injected spec pills -->
+      </div>
+      <div class="tooltip-hint">
+        <span>Double-click to focus camera</span>
+      </div>
+    </div>
+
+    <!-- Quick Camera Navigation Bar (Right) -->
+    <aside class="camera-toolbar glass-panel">
+      <span class="toolbar-title">CAMERA</span>
+      <button class="cam-btn" data-view="hero" title="Hero 45° Perspective">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        <span>Hero</span>
+      </button>
+      <button class="cam-btn" data-view="pins" title="Close-Up Orthogonal Pin Alignment View">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg>
+        <span>Pins</span>
+      </button>
+      <button class="cam-btn" data-view="top" title="Top-Down Breadboard Alignment">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        <span>Top</span>
+      </button>
+      <button class="cam-btn" data-view="esp32" title="ESP32-S3 Microcontroller Focus">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
+        <span>ESP32</span>
+      </button>
+      <button class="cam-btn" data-view="oled" title="OLED Display Screen Focus">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+        <span>OLED</span>
+      </button>
+      <button class="cam-btn" data-view="motor" title="Haptic Vibration Motor Focus">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
+        <span>Haptic</span>
+      </button>
+    </aside>
+
+    <!-- Circuit Net Inspector Filter Panel (Left) -->
+    <aside class="circuit-inspector glass-panel">
+      <div class="inspector-header">
+        <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h5l3-9 4 18 3-9h5"/></svg>
+        <span>CIRCUIT NETS</span>
+      </div>
+      <div class="net-filters">
+        <label class="net-item active" data-net="all">
+          <span class="net-color-chip all"></span>
+          <span class="net-name">Show All Wires</span>
+        </label>
+        <label class="net-item" data-net="power">
+          <span class="net-color-chip red"></span>
+          <span class="net-name">5V & 3.3V Power</span>
+        </label>
+        <label class="net-item" data-net="ground">
+          <span class="net-color-chip black"></span>
+          <span class="net-name">GND Bus</span>
+        </label>
+        <label class="net-item" data-net="i2s">
+          <span class="net-color-chip green"></span>
+          <span class="net-name">INMP441 I2S Bus</span>
+        </label>
+        <label class="net-item" data-net="motor">
+          <span class="net-color-chip yellow"></span>
+          <span class="net-name">Haptic Driver & 5V</span>
+        </label>
+        <label class="net-item" data-net="led">
+          <span class="net-color-chip blue"></span>
+          <span class="net-name">RGB LED (CC)</span>
+        </label>
+        <label class="net-item" data-net="i2c">
+          <span class="net-color-chip teal"></span>
+          <span class="net-name">SSD1306 I2C</span>
+        </label>
+        <label class="net-item" data-net="buttons">
+          <span class="net-color-chip purple"></span>
+          <span class="net-name">Tactile Buttons</span>
+        </label>
+      </div>
+
+      <!-- View & Assembly Controls -->
+      <div class="view-controls-box">
+        <div class="control-row">
+          <span class="control-label">EXPLODED VIEW</span>
+          <span class="control-val" id="val-exploded">0%</span>
+        </div>
+        <div class="slider-row">
+          <input type="range" id="slider-exploded" min="0" max="100" value="0" class="tech-slider">
+          <button class="mini-btn" id="btn-toggle-explode">Toggle</button>
+        </div>
+
+        <div class="control-row mt-sm">
+          <span class="control-label">BREADBOARD OPACITY</span>
+          <span class="control-val" id="val-opacity">100%</span>
+        </div>
+        <div class="slider-row">
+          <input type="range" id="slider-opacity" min="0" max="100" value="100" class="tech-slider">
+        </div>
+      </div>
+
+      <!-- Real-time AI & Haptic Telemetry Widget -->
+      <div class="telemetry-box">
+        <div class="telemetry-row">
+          <span class="tel-label">TINYML INFERENCE</span>
+          <span class="tel-val green-text" id="tel-ai-status">RUNNING (34ms)</span>
+        </div>
+        <div class="telemetry-row">
+          <span class="tel-label">CONFIDENCE</span>
+          <span class="tel-val" id="tel-confidence">99.2%</span>
+        </div>
+        <div class="telemetry-row">
+          <span class="tel-label">HAPTIC INTENSITY</span>
+          <span class="tel-val" id="tel-haptic-val">0% (IDLE)</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="tel-haptic-bar" style="width: 0%"></div>
+        </div>
+        <div class="telemetry-row mt-sm">
+          <span class="tel-label">MIC SPL / PEAK</span>
+          <span class="tel-val" id="tel-mic-val">42 dB (AMBIENT)</span>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar mic-bar" id="tel-mic-bar" style="width: 25%"></div>
+        </div>
+        <div class="telemetry-row mt-sm">
+          <span class="tel-label">BLE 5.0 COMPANION</span>
+          <span class="tel-val text-cyan">PHONE CONNECTED</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Interactive Alert Scenarios Floating Dock (Bottom) -->
+    <nav class="alert-dock glass-panel">
+      <div class="dock-label-strip">
+        <span class="dock-title">SIMULATE SOUND EVENTS & TACTILE PROFILES</span>
+        <span class="dock-hint">Click below or click the 3D push buttons directly on the breadboard</span>
+      </div>
+      <div class="dock-buttons">
+        <button class="alert-trigger-btn fire" id="trigger-fire" data-alert="fire">
+          <div class="btn-glow"></div>
+          <div class="btn-icon">🔥</div>
+          <div class="btn-meta">
+            <span class="alert-name">Fire Alarm</span>
+            <span class="alert-action">Red LED Blink + Cont. Vibe</span>
+          </div>
+          <span class="btn-key">GPIO 8</span>
+        </button>
+
+        <button class="alert-trigger-btn doorbell" id="trigger-doorbell" data-alert="doorbell">
+          <div class="btn-glow"></div>
+          <div class="btn-icon">🔔</div>
+          <div class="btn-meta">
+            <span class="alert-name">Doorbell</span>
+            <span class="alert-action">Blue LED + 2 Vibration Pulses</span>
+          </div>
+          <span class="btn-key">GPIO 9</span>
+        </button>
+
+        <button class="alert-trigger-btn baby" id="trigger-baby" data-alert="baby">
+          <div class="btn-glow"></div>
+          <div class="btn-icon">👶</div>
+          <div class="btn-meta">
+            <span class="alert-name">Baby Cry</span>
+            <span class="alert-action">Yellow LED + 3 Short Pulses</span>
+          </div>
+          <span class="btn-key">GPIO 10</span>
+        </button>
+
+        <button class="alert-trigger-btn horn" id="trigger-horn" data-alert="horn">
+          <div class="btn-glow"></div>
+          <div class="btn-icon">🚗</div>
+          <div class="btn-meta">
+            <span class="alert-name">Car Horn</span>
+            <span class="alert-action">Orange LED + Long Heavy Pulse</span>
+          </div>
+          <span class="btn-key">GPIO 11</span>
+        </button>
+
+        <button class="alert-trigger-btn reset" id="trigger-reset" data-alert="reset" title="Return to Ambient Listening Mode">
+          <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          <div class="btn-meta">
+            <span class="alert-name">Listening Mode</span>
+            <span class="alert-action">TinyML Ambient Audio FFT</span>
+          </div>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Modal: Hardware Architecture & Pinout Schematic -->
+    <div id="pinout-modal" class="modal-backdrop hidden">
+      <div class="modal-card glass-panel">
+        <div class="modal-header">
+          <div>
+            <span class="modal-tag">SCHEMATIC & PINOUT</span>
+            <h2 class="modal-title">EchoSense Hardware Architecture</h2>
+          </div>
+          <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="schematic-grid">
+            <div class="schematic-card">
+              <h3>⚡ Power Distribution</h3>
+              <ul>
+                <li><strong>5V (VBUS / USB) Rail:</strong> Dedicated to Coin Vibration Motor & Active Buzzer via 2N2222 transistor (prevents LDO brownouts).</li>
+                <li><strong>3.3V Rail:</strong> Powers ESP32-S3 core, INMP441 I2S microphone, SSD1306 OLED, and RGB LED.</li>
+                <li><strong>Noise Filtering:</strong> 100 µF Electrolytic + 0.1 µF Ceramic capacitors on 3.3V rail right beside the INMP441 microphone.</li>
+              </ul>
+            </div>
+            <div class="schematic-card">
+              <h3>🎙️ Audio & Classification (TinyML)</h3>
+              <ul>
+                <li><strong>INMP441 I2S:</strong> SCK → GPIO5 | WS → GPIO4 | SD → GPIO6 | VDD → 3.3V | GND, L/R → GND</li>
+                <li><strong>Sampling:</strong> 16 kHz 16-bit mono stream processed by ESP32-S3 DSP vector extensions (ESP-NN / TensorFlow Lite for Microcontrollers).</li>
+                <li><strong>Sound Categories:</strong> Fire alarm (3.1 kHz pulse), Doorbell (chime), Baby cry (400-600 Hz harmonic), Car horn (400/500 Hz blast).</li>
+              </ul>
+            </div>
+            <div class="schematic-card">
+              <h3>📳 Haptic & Visual Feedback</h3>
+              <ul>
+                <li><strong>Vibration Motor:</strong> 10mm flat coin motor powered by 5V rail; driven by 2N2222 BJT (Base → 1kΩ → GPIO18); protected by 1N4148 fast flyback diode.</li>
+                <li><strong>RGB Status LED:</strong> Common Cathode (Cathode → GND; Anodes R, G, B → 220Ω → GPIO15, 16, 17).</li>
+                <li><strong>SSD1306 OLED (0.96"):</strong> I2C interface (SDA → GPIO21, SCL → GPIO22, VCC → 3.3V, GND → GND).</li>
+                <li><strong>Developer Buzzer:</strong> 5V active piezo buzzer on GPIO14 for auditory debugging cues.</li>
+              </ul>
+            </div>
+            <div class="schematic-card">
+              <h3>🔘 Physical Input / Trigger Buttons</h3>
+              <ul>
+                <li><strong>Internal Pullups (INPUT_PULLUP):</strong> Buttons connect GPIO8, 9, 10, 11 directly to GND with software debounce.</li>
+                <li><strong>Button 1:</strong> Fire Alarm Simulation (GPIO8)</li>
+                <li><strong>Button 2:</strong> Doorbell Simulation (GPIO9)</li>
+                <li><strong>Button 3:</strong> Baby Cry Simulation (GPIO10)</li>
+                <li><strong>Button 4:</strong> Car Horn Simulation (GPIO11)</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    <!-- Modal: Interactive Pin Connections Matrix & Breadboard Wiring Map -->
+    <div id="pin-connections-modal" class="modal-backdrop hidden">
+      <div class="modal-card glass-panel pin-modal-card">
+        <div class="modal-header">
+          <div>
+            <span class="modal-tag">EXPLICIT PIN CONNECTION MATRIX</span>
+            <h2 class="modal-title">Hardware Pinout & Breadboard Wiring Map</h2>
+            <p class="modal-subtitle">Exact physical coordinates, signal lines, and jumper wire routing for all 28 circuit connections</p>
+          </div>
+          <button class="modal-close-btn" id="btn-close-pin-modal">&times;</button>
+        </div>
+
+        <div class="pin-modal-toolbar">
+          <div class="search-input-wrap">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+            <input type="text" id="pin-search-input" placeholder="Search by pin (e.g. GPIO4), hole (e.g. Row 25), signal, or color..." class="pin-search-field" />
+          </div>
+
+          <div class="pin-filter-chips">
+            <button class="pin-filter-chip active" data-filter="all">All (28)</button>
+            <button class="pin-filter-chip" data-filter="power">Power & GND</button>
+            <button class="pin-filter-chip" data-filter="i2s">I2S Mic</button>
+            <button class="pin-filter-chip" data-filter="i2c">I2C OLED</button>
+            <button class="pin-filter-chip" data-filter="motor">Haptic & Driver</button>
+            <button class="pin-filter-chip" data-filter="led">RGB Status LED</button>
+            <button class="pin-filter-chip" data-filter="buttons">Buttons</button>
+          </div>
+
+          <span class="pin-total-count" id="pin-total-count">28 Connections</span>
+        </div>
+
+        <div class="pin-table-container">
+          <table class="pin-matrix-table">
+            <thead>
+              <tr>
+                <th style="width: 105px;">Wire Color</th>
+                <th style="width: 210px;">Source Pin & Hole</th>
+                <th style="width: 40px; text-align: center;"></th>
+                <th style="width: 210px;">Target Pin & Hole</th>
+                <th>Signal Function & Assistive Purpose</th>
+                <th style="width: 110px; text-align: right;">3D View</th>
+              </tr>
+            </thead>
+            <tbody id="pin-table-body">
+              <!-- Dynamically populated by PinConnectionsModal.js -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Pin Inspection 3D HUD Floating Banner -->
+    <div id="connection-hud-banner" class="connection-hud glass-panel hidden">
+      <div class="hud-left">
+        <span class="hud-status-badge">INSPECTING PIN CONNECTION</span>
+        <h3 id="hud-connection-title" class="hud-title">ESP32 GPIO4 ➔ INMP441 WS</h3>
+        <p id="hud-connection-desc" class="hud-desc">Row 25, Col D ➔ Row 11, Col C | I2S Word Select Clock</p>
+      </div>
+      <div class="hud-right">
+        <button id="btn-hud-reset" class="icon-button primary-btn">
+          <span>Reset View</span>
+        </button>
+      </div>
+    </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
