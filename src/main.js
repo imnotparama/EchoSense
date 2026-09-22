@@ -126,13 +126,31 @@ class EchoSenseApp {
     this.raycaster = new THREE.Raycaster();
     this.mouse = new THREE.Vector2();
     this.hoveredObject = null;
+    this.isPointerDown = false;
+    this.currentlyHoveredWireId = null;
 
-    // Mouse move for hover tooltips & circuit path preview
+    let hoverRafPending = false;
+    let lastClientX = 0;
+    let lastClientY = 0;
+
+    // Mouse move for hover tooltips & circuit path preview (throttled with RAF)
     window.addEventListener('mousemove', (event) => {
+      if (this.isPointerDown) return;
+
       this.mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
       this.mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+      lastClientX = event.clientX;
+      lastClientY = event.clientY;
 
-      this.checkHover(event.clientX, event.clientY);
+      if (!hoverRafPending) {
+        hoverRafPending = true;
+        requestAnimationFrame(() => {
+          hoverRafPending = false;
+          if (!this.isPointerDown) {
+            this.checkHover(lastClientX, lastClientY);
+          }
+        });
+      }
     });
 
     let downX = 0;
@@ -140,14 +158,23 @@ class EchoSenseApp {
     let downTime = 0;
 
     window.addEventListener('pointerdown', (event) => {
+      if (event.target === this.canvas) {
+        this.isPointerDown = true;
+        this.ui.hideTooltip();
+      }
       if (event.button !== 0 || event.target !== this.canvas) return;
       downX = event.clientX;
       downY = event.clientY;
       downTime = performance.now();
     });
 
+    window.addEventListener('pointercancel', () => {
+      this.isPointerDown = false;
+    });
+
     // Single click for 3D buttons, wires, & opening component details drawer (only if not dragging camera)
     window.addEventListener('pointerup', (event) => {
+      this.isPointerDown = false;
       if (event.button !== 0 || event.target !== this.canvas) return;
 
       const dist = Math.hypot(event.clientX - downX, event.clientY - downY);
@@ -157,8 +184,8 @@ class EchoSenseApp {
 
       this.raycaster.setFromCamera(this.mouse, this.sceneMgr.camera);
 
-      // 1. Check jumper wires
-      const wireIntersects = this.raycaster.intersectObjects(this.wireMeshes, true);
+      // 1. Check jumper wires (non-recursive)
+      const wireIntersects = this.raycaster.intersectObjects(this.wireMeshes, false);
       if (wireIntersects.length > 0) {
         const hitWire = wireIntersects[0].object;
         if (hitWire.userData?.id) {
@@ -167,7 +194,7 @@ class EchoSenseApp {
         }
       }
 
-      // 3. Check all interactive components to open the details drawer
+      // 2. Check all interactive components to open the details drawer
       const intersects = this.raycaster.intersectObjects(this.interactiveObjects, true);
       if (intersects.length > 0) {
         let root = intersects[0].object;
@@ -204,16 +231,17 @@ class EchoSenseApp {
   }
 
   checkHover(clientX, clientY) {
-    if (!this.canvas) return;
+    if (!this.canvas || this.isPointerDown) return;
 
     this.raycaster.setFromCamera(this.mouse, this.sceneMgr.camera);
 
-    // Check wires first
-    const wireIntersects = this.raycaster.intersectObjects(this.wireMeshes, true);
+    // Check wires first (non-recursive)
+    const wireIntersects = this.raycaster.intersectObjects(this.wireMeshes, false);
     if (wireIntersects.length > 0) {
       const wireMesh = wireIntersects[0].object;
       const data = wireMesh.userData;
       if (data) {
+        this.hoveredObject = wireMesh;
         this.canvas.style.cursor = 'pointer';
         this.ui.showTooltip(clientX, clientY, {
           category: 'JUMPER WIRE CONNECTION',
@@ -226,7 +254,8 @@ class EchoSenseApp {
           ]
         });
 
-        if (!this.activeInspectedWireId) {
+        if (!this.activeInspectedWireId && this.currentlyHoveredWireId !== data.id) {
+          this.currentlyHoveredWireId = data.id;
           this.previewPinConnection(data.id);
         }
         return;
@@ -241,18 +270,30 @@ class EchoSenseApp {
         root = root.parent;
       }
       if (root && root.userData?.name) {
+        this.hoveredObject = root;
         this.canvas.style.cursor = 'pointer';
         this.ui.showTooltip(clientX, clientY, root.userData);
+
+        if (this.currentlyHoveredWireId !== null) {
+          this.currentlyHoveredWireId = null;
+          if (!this.activeInspectedWireId) {
+            this.wireManager.clearConnectionHighlight();
+          }
+        }
         return;
       }
     }
 
     // Nothing hovered
-    this.canvas.style.cursor = 'grab';
-    this.ui.hideTooltip();
+    if (this.hoveredObject !== null || this.currentlyHoveredWireId !== null) {
+      this.hoveredObject = null;
+      this.currentlyHoveredWireId = null;
+      this.canvas.style.cursor = 'grab';
+      this.ui.hideTooltip();
 
-    if (!this.activeInspectedWireId) {
-      this.wireManager.clearConnectionHighlight();
+      if (!this.activeInspectedWireId) {
+        this.wireManager.clearConnectionHighlight();
+      }
     }
   }
 

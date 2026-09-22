@@ -256,6 +256,14 @@ export class OLEDDisplay {
 
   update(deltaTime) {
     this.animTime += deltaTime;
-    this.drawScreen();
+    // Throttle screen texture updates to ~20 FPS (50ms interval) to eliminate GPU texture upload stalls
+    this.lastDrawTime = (this.lastDrawTime || 0) + deltaTime;
+    if (this.lastDrawTime >= 0.05) {
+      this.lastDrawTime = 0;
+      // Only animate dynamic screens (listening FFT spectrum or fire alarm flash)
+      if (this.displayState === 'listening' || this.displayState === 'fire') {
+        this.drawScreen();
+      }
+    }
   }
 }

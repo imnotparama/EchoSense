@@ -30,15 +30,15 @@ export class SceneManager {
       powerPreference: 'high-performance'
     });
 
-    // Enforce 2x supersampling for razor-sharp rendering on all displays
-    const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 2), 3);
+    // Optimal performance pixel ratio: clamp to max 1.5 to avoid GPU fillrate bottleneck on 4K/high-DPI screens
+    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
     this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(window.innerWidth, window.innerHeight);
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.toneMappingExposure = 1.35; // Bright, clear, vibrant
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
   }
 
   initCamera() {
@@ -73,8 +73,8 @@ export class SceneManager {
     this.keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
     this.keyLight.position.set(7, 18, 11);
     this.keyLight.castShadow = true;
-    this.keyLight.shadow.mapSize.width = 2048;
-    this.keyLight.shadow.mapSize.height = 2048;
+    this.keyLight.shadow.mapSize.width = 1024;
+    this.keyLight.shadow.mapSize.height = 1024;
     this.keyLight.shadow.camera.near = 2;
     this.keyLight.shadow.camera.far = 35;
     this.keyLight.shadow.camera.left = -12;
@@ -290,7 +290,7 @@ export class SceneManager {
       this.camera.aspect = width / height;
       this.camera.updateProjectionMatrix();
 
-      const dpr = Math.min(Math.max(window.devicePixelRatio || 1, 2), 3);
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       this.renderer.setPixelRatio(dpr);
       this.renderer.setSize(width, height);
     });

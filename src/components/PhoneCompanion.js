@@ -143,20 +143,8 @@ export class PhoneCompanion {
     };
     this.screenOn = true;
     this.glowIntensity = 1.3;
+    this.cardAnimY = 370;
     this.triggerVibration(1.2, 1.0);
-
-    // Smooth slide-in animation for incoming push notification
-    this.cardAnimY = 160;
-    const tweenObj = { y: 160 };
-    new TWEEN.Tween(tweenObj)
-      .to({ y: 370 }, 450)
-      .easing(TWEEN.Easing.Back.Out)
-      .onUpdate(() => {
-        this.cardAnimY = tweenObj.y;
-        this.drawScreen();
-      })
-      .start();
-
     this.drawScreen();
   }
 

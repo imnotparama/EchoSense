@@ -483,6 +483,7 @@ export class WireManager {
     const p3 = new THREE.Vector3(pEnd.x, pEnd.y + 0.38, pEnd.z);
 
     const curve = new THREE.CatmullRomCurve3([pStart.clone(), p1, p2, p3, pEnd.clone()]);
+    const sampledPoints = curve.getPoints(50);
     // Increased tube radius to 0.062 for thick, bold, razor-sharp jumper wire rendering
     const wireGeo = new THREE.TubeGeometry(curve, 36, 0.062, 12, false);
 
@@ -514,6 +515,7 @@ export class WireManager {
       toComp: def.toComp,
       sag: def.sag || 0.3,
       curve: curve,
+      sampledPoints: sampledPoints,
       group: wireGroup,
       wireMesh: wireMesh,
       material: wireMat,
@@ -552,6 +554,7 @@ export class WireManager {
       const p3 = new THREE.Vector3(pEnd.x, pEnd.y + 0.38, pEnd.z);
 
       w.curve = new THREE.CatmullRomCurve3([pStart, p1, p2, p3, pEnd]);
+      w.sampledPoints = w.curve.getPoints(50);
       w.wireMesh.geometry.dispose();
       w.wireMesh.geometry = new THREE.TubeGeometry(w.curve, 36, 0.062, 12, false);
 
@@ -738,9 +741,9 @@ export class WireManager {
       el.t = (el.t + el.speed * deltaTime) % 1.0;
 
       const isWireActive = (this.activeFilter === 'all' || el.wire.net === this.activeFilter);
-      if (isWireActive) {
-        const point = el.wire.curve.getPointAt(el.t);
-        dummy.position.copy(point);
+      if (isWireActive && el.wire.sampledPoints) {
+        const idx = Math.min(el.wire.sampledPoints.length - 1, Math.floor(el.t * el.wire.sampledPoints.length));
+        dummy.position.copy(el.wire.sampledPoints[idx]);
         dummy.scale.set(1, 1, 1);
       } else {
         dummy.scale.set(0, 0, 0);
