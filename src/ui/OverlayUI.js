@@ -9,7 +9,7 @@ export class OverlayUI {
     this.tooltipSpecs = document.getElementById('tooltip-specs');
 
     this.statusBadge = document.getElementById('device-status-badge');
-    this.statusDot = this.statusBadge.querySelector('.status-dot');
+    this.statusDot = this.statusBadge?.querySelector('.status-dot');
     this.statusText = document.getElementById('status-text');
 
     this.hapticValEl = document.getElementById('tel-haptic-val');
@@ -18,11 +18,15 @@ export class OverlayUI {
     this.micBarEl = document.getElementById('tel-mic-bar');
     this.aiStatusEl = document.getElementById('tel-ai-status');
     this.confidenceEl = document.getElementById('tel-confidence');
+    this.telDetectedSound = document.getElementById('tel-detected-sound');
+    this.telInferTime = document.getElementById('tel-infer-time');
+    this.cpuLoadVal = document.getElementById('cpu-load-val');
+    this.cpuBar = document.getElementById('cpu-bar');
+    this.ramLoadVal = document.getElementById('ram-load-val');
+    this.ramBar = document.getElementById('ram-bar');
 
     this.valExploded = document.getElementById('val-exploded');
-    this.valOpacity = document.getElementById('val-opacity');
     this.sliderExploded = document.getElementById('slider-exploded');
-    this.sliderOpacity = document.getElementById('slider-opacity');
 
     this.modalEl = document.getElementById('pinout-modal');
     this.audioBtn = document.getElementById('btn-audio-toggle');
@@ -34,8 +38,21 @@ export class OverlayUI {
     this.drawerTitle = document.getElementById('drawer-title');
     this.drawerDesc = document.getElementById('drawer-desc');
     this.drawerRole = document.getElementById('drawer-role');
+    this.drawerVoltage = document.getElementById('drawer-voltage');
+    this.drawerProtocol = document.getElementById('drawer-protocol');
+    this.drawerGpios = document.getElementById('drawer-gpios');
+    this.drawerStatus = document.getElementById('drawer-status');
     this.drawerConn = document.getElementById('drawer-connections');
     this.activeDrawerData = null;
+
+    // Pin Connection Inspector HUD elements
+    this.hudBanner = document.getElementById('connection-hud-banner');
+    this.hudSrcPin = document.getElementById('hud-src-pin');
+    this.hudWireDesc = document.getElementById('hud-wire-desc');
+    this.hudDestComp = document.getElementById('hud-dest-comp');
+    this.hudDestPin = document.getElementById('hud-dest-pin');
+    this.hudNetBadge = document.getElementById('hud-net-badge');
+    this.hudDesc = document.getElementById('hud-connection-desc');
 
     this.initEvents();
   }
@@ -62,7 +79,7 @@ export class OverlayUI {
         this.callbacks.onIsolateCircuit(this.activeDrawerData);
       }
     });
-    // Camera toolbar
+    // Camera toolbar presets
     document.querySelectorAll('.cam-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('active'));
@@ -72,17 +89,35 @@ export class OverlayUI {
       });
     });
 
-    // Circuit Net filters
-    document.querySelectorAll('.net-item').forEach(item => {
-      item.addEventListener('click', () => {
-        document.querySelectorAll('.net-item').forEach(i => i.classList.remove('active'));
-        item.classList.add('active');
-        const net = item.getAttribute('data-net');
+    // Connection Legend chips (Always-visible net isolation)
+    document.querySelectorAll('.legend-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.legend-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        const net = chip.getAttribute('data-net');
         this.callbacks.onNetFilter(net);
       });
     });
 
-    // Alert trigger buttons
+    // Breadboard Transparency Stepper (100%, 75%, 50%, 25%, 0% - Hide Plastic Completely)
+    document.querySelectorAll('.trans-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.trans-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const alpha = parseFloat(btn.getAttribute('data-opacity'));
+        this.callbacks.onOpacityChange(alpha);
+      });
+    });
+
+    // Pin Inspector Reset button
+    document.getElementById('btn-hud-reset')?.addEventListener('click', () => {
+      this.hidePinInspector();
+      if (this.callbacks.onResetInspection) {
+        this.callbacks.onResetInspection();
+      }
+    });
+
+    // Alert trigger buttons (Software simulation dock)
     document.querySelectorAll('.alert-trigger-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const alertType = btn.getAttribute('data-alert');
@@ -102,13 +137,6 @@ export class OverlayUI {
       const pct = isExp ? 100 : 0;
       this.sliderExploded.value = pct;
       this.valExploded.textContent = `${pct}%`;
-    });
-
-    // Breadboard Opacity Slider
-    this.sliderOpacity?.addEventListener('input', (e) => {
-      const val = parseFloat(e.target.value) / 100;
-      this.valOpacity.textContent = `${Math.round(val * 100)}%`;
-      this.callbacks.onOpacityChange(val);
     });
 
     // X-Ray Mode Toggle
@@ -172,6 +200,64 @@ export class OverlayUI {
     this.drawerTitle.textContent = data.name || 'Component Details';
     this.drawerDesc.textContent = data.desc || '';
     this.drawerRole.textContent = data.role || data.desc || 'Primary functional module in the assistive prototype pipeline.';
+
+    // Detailed engineering specifications
+    const specsMap = {
+      'INMP441 I2S Microphone': {
+        voltage: '3.3V DC (VDD Rail)',
+        protocol: 'I2S (24-bit PCM Mono DMA)',
+        gpios: 'GPIO4 (WS), GPIO5 (SCK), GPIO6 (SD)',
+        status: 'Active (Sampling @ 16,000 Hz)'
+      },
+      'ESP32-S3 DevKitC-1': {
+        voltage: '5.0V USB / 3.3V LDO Out',
+        protocol: 'I2S, I2C, PWM, BLE 5.0 GATT',
+        gpios: 'GPIO4-6, 14, 15-18, 21-22',
+        status: 'Running (Xtensa Dual LX7 @ 240MHz)'
+      },
+      '0.96" I2C OLED Display (SSD1306)': {
+        voltage: '3.3V DC (VCC Rail)',
+        protocol: 'I2C Fast Mode (400 kHz)',
+        gpios: 'GPIO21 (SDA), GPIO22 (SCL)',
+        status: 'Active (128x64 Dynamic Framebuffer)'
+      },
+      '10mm Coin Vibration Motor': {
+        voltage: '5.0V DC (VBUS USB Rail)',
+        protocol: 'Low-Side Transistor Switched',
+        gpios: 'GPIO18 (PWM to 2N2222 Base)',
+        status: 'Tactile Haptic Actuator (12,000 RPM)'
+      },
+      '5mm Common Cathode RGB LED': {
+        voltage: '3.3V DC (220Ω Current Limited)',
+        protocol: 'Direct GPIO Tri-State PWM',
+        gpios: 'GPIO15 (R), GPIO16 (G), GPIO17 (B)',
+        status: 'Tri-Color Visual Indicator'
+      },
+      '2N2222 NPN BJT Transistor': {
+        voltage: '5.0V Collector / 0.7V Base',
+        protocol: 'Low-Side Saturation Driver',
+        gpios: 'GPIO18 (1kΩ Base Resistor)',
+        status: 'Sinking 80mA Motor Current'
+      },
+      'Active Piezo Buzzer': {
+        voltage: '5.0V DC (USB VBUS Rail)',
+        protocol: 'Direct Digital Logic Out',
+        gpios: 'GPIO14 (Active HIGH)',
+        status: 'Auditory Debugging Transducer'
+      }
+    };
+
+    const sp = specsMap[data.name] || {
+      voltage: '3.3V / 5.0V DC',
+      protocol: 'Discrete Hardware Net',
+      gpios: 'Direct Breadboard Tie Point',
+      status: 'Passive Circuit Element'
+    };
+
+    if (this.drawerVoltage) this.drawerVoltage.textContent = sp.voltage;
+    if (this.drawerProtocol) this.drawerProtocol.textContent = sp.protocol;
+    if (this.drawerGpios) this.drawerGpios.textContent = sp.gpios;
+    if (this.drawerStatus) this.drawerStatus.textContent = sp.status;
 
     // Populate connections table
     this.drawerConn.innerHTML = '';
@@ -244,6 +330,21 @@ export class OverlayUI {
     this.activeDrawerData = null;
   }
 
+  showPinInspector(pathway) {
+    if (!pathway) return;
+    if (this.hudSrcPin) this.hudSrcPin.textContent = pathway.espPin || 'GPIO';
+    if (this.hudWireDesc) this.hudWireDesc.textContent = pathway.wireName || 'Jumper Wire';
+    if (this.hudDestComp) this.hudDestComp.textContent = pathway.destComp || 'Component';
+    if (this.hudDestPin) this.hudDestPin.textContent = pathway.destPin || 'Pin';
+    if (this.hudNetBadge) this.hudNetBadge.textContent = (pathway.net || 'SIGNAL').toUpperCase();
+    if (this.hudDesc) this.hudDesc.textContent = pathway.purpose || '';
+    if (this.hudBanner) this.hudBanner.classList.remove('hidden');
+  }
+
+  hidePinInspector() {
+    if (this.hudBanner) this.hudBanner.classList.add('hidden');
+  }
+
   showTooltip(x, y, data) {
     if (!data) {
       this.hideTooltip();
@@ -264,7 +365,7 @@ export class OverlayUI {
       });
     }
 
-    const tooltipW = 300;
+    const tooltipW = 320;
     const tooltipH = 220;
     const posX = Math.min(window.innerWidth - tooltipW - 20, x + 15);
     const posY = Math.max(80, Math.min(window.innerHeight - tooltipH - 20, y - 60));
@@ -288,7 +389,11 @@ export class OverlayUI {
       this.statusBadge.style.background = 'rgba(16, 185, 129, 0.1)';
       this.statusText.style.color = '#34d399';
       this.confidenceEl.textContent = '---';
-      this.aiStatusEl.textContent = 'RUNNING (34ms)';
+      this.aiStatusEl.textContent = 'RUNNING (31ms)';
+      if (this.telDetectedSound) this.telDetectedSound.textContent = 'AMBIENT (LISTENING)';
+      if (this.telInferTime) this.telInferTime.textContent = '31 ms (1D-CNN)';
+      if (this.cpuLoadVal) this.cpuLoadVal.textContent = '16% (Dual Core)';
+      if (this.cpuBar) this.cpuBar.style.width = '16%';
     } else if (statusKey === 'fire') {
       this.statusDot.classList.add('red');
       this.statusBadge.style.borderColor = 'rgba(239, 68, 68, 0.5)';
@@ -296,20 +401,32 @@ export class OverlayUI {
       this.statusText.style.color = '#f87171';
       this.confidenceEl.textContent = '99.4%';
       this.aiStatusEl.textContent = 'ALERT (31ms)';
+      if (this.telDetectedSound) this.telDetectedSound.textContent = '🔥 FIRE ALARM (3.1 kHz)';
+      if (this.telInferTime) this.telInferTime.textContent = '31 ms (Inference)';
+      if (this.cpuLoadVal) this.cpuLoadVal.textContent = '26% (DSP Active)';
+      if (this.cpuBar) this.cpuBar.style.width = '26%';
     } else if (statusKey === 'doorbell') {
       this.statusDot.classList.add('blue');
       this.statusBadge.style.borderColor = 'rgba(56, 189, 248, 0.5)';
       this.statusBadge.style.background = 'rgba(56, 189, 248, 0.2)';
       this.statusText.style.color = '#38bdf8';
       this.confidenceEl.textContent = '98.7%';
-      this.aiStatusEl.textContent = 'ALERT (35ms)';
+      this.aiStatusEl.textContent = 'ALERT (33ms)';
+      if (this.telDetectedSound) this.telDetectedSound.textContent = '🔔 DOORBELL (Chime)';
+      if (this.telInferTime) this.telInferTime.textContent = '33 ms (Inference)';
+      if (this.cpuLoadVal) this.cpuLoadVal.textContent = '21% (DSP Active)';
+      if (this.cpuBar) this.cpuBar.style.width = '21%';
     } else if (statusKey === 'baby') {
       this.statusDot.classList.add('yellow');
       this.statusBadge.style.borderColor = 'rgba(245, 158, 11, 0.5)';
       this.statusBadge.style.background = 'rgba(245, 158, 11, 0.2)';
       this.statusText.style.color = '#fbbf24';
       this.confidenceEl.textContent = '95.8%';
-      this.aiStatusEl.textContent = 'ALERT (33ms)';
+      this.aiStatusEl.textContent = 'ALERT (34ms)';
+      if (this.telDetectedSound) this.telDetectedSound.textContent = '👶 BABY CRY (Harmonic)';
+      if (this.telInferTime) this.telInferTime.textContent = '34 ms (Inference)';
+      if (this.cpuLoadVal) this.cpuLoadVal.textContent = '22% (DSP Active)';
+      if (this.cpuBar) this.cpuBar.style.width = '22%';
     } else if (statusKey === 'horn') {
       this.statusDot.classList.add('orange');
       this.statusBadge.style.borderColor = 'rgba(249, 115, 22, 0.5)';
@@ -317,6 +434,10 @@ export class OverlayUI {
       this.statusText.style.color = '#fb923c';
       this.confidenceEl.textContent = '99.1%';
       this.aiStatusEl.textContent = 'ALERT (32ms)';
+      if (this.telDetectedSound) this.telDetectedSound.textContent = '🚗 CAR HORN (Dual-Tone)';
+      if (this.telInferTime) this.telInferTime.textContent = '32 ms (Inference)';
+      if (this.cpuLoadVal) this.cpuLoadVal.textContent = '24% (DSP Active)';
+      if (this.cpuBar) this.cpuBar.style.width = '24%';
     }
 
     document.querySelectorAll('.alert-trigger-btn').forEach(b => {

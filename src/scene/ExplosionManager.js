@@ -6,29 +6,29 @@ export class ExplosionManager {
     this.isExploded = false;
     this.currentFactor = 0;
 
-    // Component explosion vertical lift offsets (in cm)
+    // Component explosion vertical lift offsets (in cm) - CAD Layer clearance
     this.liftMap = {
-      oled: 3.5,
-      inmp441: 2.8,
-      esp32: 2.2,
-      rgbLed: 2.5,
-      capacitors: 1.8,
+      oled: 4.5,
+      esp32: 3.2,
+      rgbLed: 2.8,
+      capacitors: 2.4,
+      buzzer: 2.2,
+      inmp441: 2.0,
       transCircuit: 1.8,
-      buzzer: 1.6,
       vibeMotor: 1.6,
-      breadboard: -0.8
+      breadboard: -1.2
     };
 
     this.offsets = [
-      { key: 'oled', comp: components.oled, liftY: 3.5 },
-      { key: 'inmp441', comp: components.inmp441, liftY: 2.8 },
-      { key: 'esp32', comp: components.esp32, liftY: 2.2 },
-      { key: 'rgbLed', comp: components.rgbLed, liftY: 2.5 },
-      { key: 'capacitors', comp: components.capacitors, liftY: 1.8 },
+      { key: 'oled', comp: components.oled, liftY: 4.5 },
+      { key: 'esp32', comp: components.esp32, liftY: 3.2 },
+      { key: 'rgbLed', comp: components.rgbLed, liftY: 2.8 },
+      { key: 'capacitors', comp: components.capacitors, liftY: 2.4 },
+      { key: 'buzzer', comp: components.buzzer, liftY: 2.2 },
+      { key: 'inmp441', comp: components.inmp441, liftY: 2.0 },
       { key: 'transCircuit', comp: components.transCircuit, liftY: 1.8 },
-      { key: 'buzzer', comp: components.buzzer, liftY: 1.6 },
       { key: 'vibeMotor', comp: components.vibeMotor, liftY: 1.6 },
-      { key: 'breadboard', comp: components.breadboard, liftY: -0.8 }
+      { key: 'breadboard', comp: components.breadboard, liftY: -1.2 }
     ];
 
     // Cache default initial Y positions

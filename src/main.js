@@ -305,15 +305,10 @@ class EchoSenseApp {
     // Focus camera onto the two pin coordinates
     this.sceneMgr.focusOnPinConnection(res.pStart, res.pEnd);
 
-    // Show on-screen HUD banner
-    const hud = document.getElementById('connection-hud-banner');
-    const title = document.getElementById('hud-connection-title');
-    const desc = document.getElementById('hud-connection-desc');
-
-    if (hud && title && desc) {
-      title.textContent = `${res.wire.fromPin} ➔ ${res.wire.toPin}`;
-      desc.textContent = `${res.wire.fromHole} ➔ ${res.wire.toHole} | ${res.wire.role || res.wire.name}`;
-      hud.classList.remove('hidden');
+    // Show pathway on HUD
+    const pathway = this.wireManager.getPinPathway(wireId);
+    if (pathway) {
+      this.ui.showPinInspector(pathway);
     }
   }
 
@@ -325,29 +320,131 @@ class EchoSenseApp {
   resetPinInspection() {
     this.activeInspectedWireId = null;
     this.wireManager.clearConnectionHighlight();
-    const hud = document.getElementById('connection-hud-banner');
-    hud?.classList.add('hidden');
-    this.sceneMgr.setCameraView('pins');
+    this.resetComponentDimming();
+    this.ui.hidePinInspector();
+    this.sceneMgr.setCameraView('reset');
   }
 
   isolateComponentCircuit(compName) {
-    const netMap = {
-      'INMP441 I2S Microphone': 'i2s',
-      '0.96" I2C OLED Display (SSD1306)': 'i2c',
-      '10mm Coin Vibration Motor': 'motor',
-      '2N2222 NPN BJT Transistor': 'gpio18',
-      '5mm Common Cathode RGB LED': 'led',
-      'Active Piezo Buzzer': 'buzzer',
-      'ESP32-S3 DevKitC-1': 'power'
+    // 1. Isolate the wires connecting to this component, its power, and GND
+    const compNetMap = {
+      'INMP441 I2S Microphone': {
+        nets: ['i2s', 'power', 'ground'],
+        relatedComps: ['inmp441', 'esp32', 'breadboard']
+      },
+      '0.96" I2C OLED Display (SSD1306)': {
+        nets: ['i2c', 'power', 'ground'],
+        relatedComps: ['oled', 'esp32', 'breadboard']
+      },
+      '10mm Coin Vibration Motor': {
+        nets: ['motor', 'power', 'ground'],
+        relatedComps: ['vibeMotor', 'transCircuit', 'esp32', 'breadboard']
+      },
+      '2N2222 NPN BJT Transistor': {
+        nets: ['motor', 'ground'],
+        relatedComps: ['transCircuit', 'vibeMotor', 'esp32', 'breadboard']
+      },
+      '5mm Common Cathode RGB LED': {
+        nets: ['led', 'ground'],
+        relatedComps: ['rgbLed', 'esp32', 'breadboard']
+      },
+      'Active Piezo Buzzer': {
+        nets: ['buzzer', 'ground'],
+        relatedComps: ['buzzer', 'esp32', 'breadboard']
+      },
+      'ESP32-S3 DevKitC-1': {
+        nets: ['power', 'ground', 'i2s', 'i2c', 'motor', 'led', 'buzzer'],
+        relatedComps: ['esp32', 'inmp441', 'oled', 'vibeMotor', 'rgbLed', 'buzzer', 'transCircuit', 'breadboard']
+      }
     };
-    const target = netMap[compName] || 'all';
-    this.wireManager.highlightPath(target);
+
+    const cfg = compNetMap[compName];
+    if (!cfg) {
+      this.resetComponentDimming();
+      return;
+    }
+
+    // Isolate wires in WireManager
+    this.wireManager.wireRecords.forEach(w => {
+      const isRelated = cfg.nets.includes(w.net) || cfg.relatedComps.includes(w.fromComp) || cfg.relatedComps.includes(w.toComp);
+      if (isRelated) {
+        w.group.visible = true;
+        w.material.opacity = 1.0;
+        w.material.transparent = false;
+        w.material.emissive.setHex(0x00f0ff);
+        w.material.emissiveIntensity = 0.5;
+        w.group.children.forEach(c => c.visible = true);
+      } else {
+        w.group.visible = true;
+        w.material.opacity = 0.10; // Exactly 10% opacity for unrelated parts
+        w.material.transparent = true;
+        w.material.emissive.setHex(0x000000);
+        w.group.children.forEach(c => { if (c !== w.wireMesh) c.visible = false; });
+      }
+    });
+
+    // Dim unrelated component meshes to 10%
+    const compGroupMap = {
+      inmp441: this.inmp441.group,
+      oled: this.oled.group,
+      vibeMotor: this.vibeMotor.group,
+      transCircuit: this.transCircuit.group,
+      rgbLed: this.rgbLed.group,
+      buzzer: this.buzzer.group,
+      capacitors: this.capacitors.group,
+      esp32: this.esp32.group
+    };
+
+    Object.entries(compGroupMap).forEach(([key, grp]) => {
+      const isRelated = cfg.relatedComps.includes(key);
+      grp.traverse(child => {
+        if (child.isMesh && child.material) {
+          if (child.userData.origOpacity === undefined) {
+            child.userData.origOpacity = child.material.opacity !== undefined ? child.material.opacity : 1.0;
+            child.userData.origTransparent = child.material.transparent || false;
+          }
+          if (isRelated) {
+            child.material.transparent = child.userData.origTransparent;
+            child.material.opacity = child.userData.origOpacity;
+          } else {
+            child.material.transparent = true;
+            child.material.opacity = 0.10;
+          }
+        }
+      });
+    });
+  }
+
+  resetComponentDimming() {
+    const allGroups = [
+      this.inmp441.group,
+      this.oled.group,
+      this.vibeMotor.group,
+      this.transCircuit.group,
+      this.rgbLed.group,
+      this.buzzer.group,
+      this.capacitors.group,
+      this.esp32.group
+    ];
+
+    allGroups.forEach(grp => {
+      grp.traverse(child => {
+        if (child.isMesh && child.material && child.userData.origOpacity !== undefined) {
+          child.material.transparent = child.userData.origTransparent;
+          child.material.opacity = child.userData.origOpacity;
+        }
+      });
+    });
+    this.wireManager.filterNet('all');
   }
 
   initUI() {
     this.ui = new OverlayUI({
       onCameraChange: (viewKey) => this.sceneMgr.setCameraView(viewKey),
-      onNetFilter: (netKey) => this.wireManager.filterNet(netKey),
+      onNetFilter: (netKey) => {
+        this.resetComponentDimming();
+        this.wireManager.filterNet(netKey);
+      },
       onTriggerAlert: (alertType) => this.triggerAlert(alertType),
       onToggleAudio: () => this.soundSynth.toggleMute(),
       onExplodeChange: (factor) => this.explosionMgr.setFactor(factor),
@@ -365,6 +462,9 @@ class EchoSenseApp {
       },
       onIsolateCircuit: (data) => {
         this.isolateComponentCircuit(data.name);
+      },
+      onResetInspection: () => {
+        this.resetPinInspection();
       }
     });
 

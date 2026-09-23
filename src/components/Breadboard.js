@@ -72,6 +72,7 @@ export class Breadboard {
     body.receiveShadow = true;
     body.castShadow = true;
     this.group.add(body);
+    this.bodyMesh = body;
 
     // Center divider trough (indent)
     const troughGeo = new THREE.BoxGeometry(this.length - 0.6, 0.15, 0.28);
@@ -85,6 +86,7 @@ export class Breadboard {
     const trough = new THREE.Mesh(troughGeo, troughMat);
     trough.position.set(0, this.height - 0.04, 0);
     this.group.add(trough);
+    this.troughMesh = trough;
 
     // Side power rail separators (two indents separating power buses from terminal strips)
     const sepGeo = new THREE.BoxGeometry(this.length - 0.6, 0.08, 0.12);
@@ -99,10 +101,12 @@ export class Breadboard {
     const sepTop = new THREE.Mesh(sepGeo, sepMat);
     sepTop.position.set(0, this.height - 0.03, -1.7);
     this.group.add(sepTop);
+    this.sepTopMesh = sepTop;
 
     const sepBot = new THREE.Mesh(sepGeo, sepMat);
     sepBot.position.set(0, this.height - 0.03, 1.7);
     this.group.add(sepBot);
+    this.sepBotMesh = sepBot;
   }
 
   createFacePlate() {
@@ -257,18 +261,34 @@ export class Breadboard {
     plate.position.y = this.height + 0.001;
     plate.receiveShadow = true;
     this.group.add(plate);
+    this.facePlateMesh = plate;
   }
 
   /**
    * Set opacity of the breadboard body (0.0 to 1.0)
-   * When opacity is low, the internal metal spring clips become fully visible!
+   * Supports 100%, 75%, 50%, 25%, and 0%.
+   * When alpha is 0.0, the plastic body, faceplate, and sockets are hidden completely,
+   * exposing internal metal spring clips, bus rails, and jumper pin insertions!
    */
   setOpacity(alpha) {
     const clamped = Math.max(0, Math.min(1, alpha));
+    const hidePlastic = (clamped <= 0.05);
+
+    if (this.bodyMesh) this.bodyMesh.visible = !hidePlastic;
+    if (this.troughMesh) this.troughMesh.visible = !hidePlastic;
+    if (this.sepTopMesh) this.sepTopMesh.visible = !hidePlastic;
+    if (this.sepBotMesh) this.sepBotMesh.visible = !hidePlastic;
+    if (this.facePlateMesh) this.facePlateMesh.visible = !hidePlastic;
+    if (this.socketHolesMesh) this.socketHolesMesh.visible = !hidePlastic;
+
     this.transparentMaterials.forEach(mat => {
       mat.opacity = clamped;
-      mat.depthWrite = clamped > 0.1;
+      mat.depthWrite = clamped > 0.15;
     });
+
+    if (this.internalClips && this.internalClips.group) {
+      this.internalClips.group.visible = true;
+    }
   }
 
   createSocketHoles() {
@@ -323,6 +343,7 @@ export class Breadboard {
 
     instancedMesh.instanceMatrix.needsUpdate = true;
     this.group.add(instancedMesh);
+    this.socketHolesMesh = instancedMesh;
   }
 
   // Coordinate mapping utilities

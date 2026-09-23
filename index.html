@@ -76,26 +76,43 @@
     <aside id="component-drawer" class="component-drawer glass-panel hidden">
       <div class="drawer-header">
         <div>
-          <span class="drawer-tag" id="drawer-cat">AUDIO SENSOR</span>
-          <h2 class="drawer-title" id="drawer-title">INMP441 I2S Microphone</h2>
+          <span class="drawer-tag" id="drawer-cat">HARDWARE COMPONENT</span>
+          <h2 class="drawer-title" id="drawer-title">Component Name</h2>
         </div>
         <button class="drawer-close-btn" id="btn-close-drawer">&times;</button>
       </div>
       <div class="drawer-body">
-        <p class="drawer-desc" id="drawer-desc">Description</p>
-        <div class="drawer-section">
-          <h4 class="drawer-sec-title">ASSISTIVE ROLE</h4>
-          <p class="drawer-subtext" id="drawer-role">Acoustic capture for deaf awareness.</p>
+        <div class="drawer-info-grid">
+          <div class="drawer-info-item">
+            <span class="info-label">OPERATING VOLTAGE</span>
+            <span class="info-value" id="drawer-voltage">3.3V DC</span>
+          </div>
+          <div class="drawer-info-item">
+            <span class="info-label">PROTOCOL / BUS</span>
+            <span class="info-value" id="drawer-protocol">I2S (Inter-IC Sound)</span>
+          </div>
+          <div class="drawer-info-item">
+            <span class="info-label">CONNECTED GPIOS</span>
+            <span class="info-value text-cyan" id="drawer-gpios">GPIO4, GPIO5, GPIO6</span>
+          </div>
+          <div class="drawer-info-item">
+            <span class="info-label">RUNTIME STATUS</span>
+            <span class="info-value text-green" id="drawer-status">Active (24-bit DMA Stream)</span>
+          </div>
+        </div>
+        <div class="drawer-section mt-sm">
+          <h4 class="drawer-sec-title">PURPOSE & ASSISTIVE ROLE</h4>
+          <p class="drawer-subtext" id="drawer-role">Primary functional module in the assistive prototype pipeline.</p>
         </div>
         <div class="drawer-section">
-          <h4 class="drawer-sec-title">PIN CONNECTIONS</h4>
+          <h4 class="drawer-sec-title">PHYSICAL PIN CONNECTIONS</h4>
           <div id="drawer-connections" class="drawer-conn-table">
             <!-- Dynamically populated -->
           </div>
         </div>
         <div class="drawer-actions">
           <button class="primary-btn drawer-btn" id="btn-drawer-focus">Focus Camera</button>
-          <button class="icon-button drawer-btn" id="btn-drawer-isolate">Isolate Circuit</button>
+          <button class="icon-button drawer-btn" id="btn-drawer-isolate">Isolate Circuit (10% Dim)</button>
         </div>
       </div>
     </aside>
@@ -128,127 +145,186 @@
         <!-- Dynamically injected spec pills -->
       </div>
       <div class="tooltip-hint">
-        <span>Double-click to focus camera</span>
+        <span>Click to inspect pin path • Double-click to focus</span>
       </div>
     </div>
 
-    <!-- Quick Camera Navigation Bar (Right) -->
+    <!-- Always-Visible Connection Legend Bar -->
+    <div class="connection-legend-bar glass-panel">
+      <span class="legend-title">NET LEGEND</span>
+      <div class="legend-chips">
+        <button class="legend-chip active" data-net="all" title="Show All Jumper Wires">
+          <span class="chip-color all"></span>
+          <span>All Wires</span>
+        </button>
+        <button class="legend-chip" data-net="i2s" title="I2S Digital Audio Bus (SCK & WS Clock)">
+          <span class="chip-color green"></span>
+          <span>🟢 I2S Clock</span>
+        </button>
+        <button class="legend-chip" data-net="i2s" title="I2S Digital Audio Data (SD line)">
+          <span class="chip-color purple"></span>
+          <span>🟣 I2S Data</span>
+        </button>
+        <button class="legend-chip" data-net="i2c" title="I2C Display Bus (SDA / SCL)">
+          <span class="chip-color teal"></span>
+          <span>🔵 OLED I²C</span>
+        </button>
+        <button class="legend-chip" data-net="motor" title="Haptic Actuator & 2N2222 Low-Side Driver">
+          <span class="chip-color yellow"></span>
+          <span>🟡 Motor Driver</span>
+        </button>
+        <button class="legend-chip" data-net="power" title="5V USB VBUS & 3.3V LDO Power Rails">
+          <span class="chip-color red"></span>
+          <span>🔴 Power (5V/3.3V)</span>
+        </button>
+        <button class="legend-chip" data-net="ground" title="Ground Return Reference Rails">
+          <span class="chip-color black"></span>
+          <span>⚫ Ground</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Engineering Camera Presets Bar (Right) -->
     <aside class="camera-toolbar glass-panel">
-      <span class="toolbar-title">CAMERA</span>
-      <button class="cam-btn" data-view="hero" title="Hero 45° Perspective">
+      <span class="toolbar-title">VIEWPORT</span>
+      <button class="cam-btn active" data-view="reset" title="Reset Camera to Engineering Hero Perspective">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-        <span>Hero</span>
+        <span>Reset</span>
       </button>
-      <button class="cam-btn" data-view="pins" title="Close-Up Orthogonal Pin Alignment View">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><path d="M12 8v8M8 12h8"/></svg>
-        <span>Pins</span>
-      </button>
-      <button class="cam-btn" data-view="top" title="Top-Down Breadboard Alignment">
+      <button class="cam-btn" data-view="top" title="Top-Down Orthographic Breadboard Alignment">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
         <span>Top</span>
       </button>
-      <button class="cam-btn" data-view="esp32" title="ESP32-S3 Microcontroller Focus">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="4" width="16" height="16" rx="2"/><circle cx="12" cy="12" r="3"/></svg>
-        <span>ESP32</span>
+      <button class="cam-btn" data-view="front" title="Front Elevation View">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="6" width="18" height="12" rx="2"/><path d="M8 12h8"/></svg>
+        <span>Front</span>
       </button>
-      <button class="cam-btn" data-view="oled" title="OLED Display Screen Focus">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
-        <span>OLED</span>
+      <button class="cam-btn" data-view="left" title="Left Profile View (INMP441 I2S Bus)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+        <span>Left</span>
       </button>
-      <button class="cam-btn" data-view="motor" title="Haptic Vibration Motor Focus">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/></svg>
-        <span>Haptic</span>
+      <button class="cam-btn" data-view="right" title="Right Profile View (Motor Driver & Actuators)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+        <span>Right</span>
+      </button>
+      <button class="cam-btn" data-view="iso" title="Isometric 30° CAD View">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l10 6-10 6-10-6z"/><path d="M2 14l10 6 10-6"/><path d="M2 8l10 6 10-6"/></svg>
+        <span>Isometric</span>
+      </button>
+      <button class="cam-btn" data-view="exploded" title="Elevated Layer Exploded Assembly View">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v6m0 8v6M2 12h6m8 0h6"/></svg>
+        <span>Exploded</span>
       </button>
     </aside>
 
-    <!-- Circuit Net Inspector Filter Panel (Left) -->
-    <aside class="circuit-inspector glass-panel">
+    <!-- Live AI & Hardware Diagnostics Dashboard (Left) -->
+    <aside class="diagnostics-dashboard glass-panel">
       <div class="inspector-header">
-        <svg class="icon-small" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12h5l3-9 4 18 3-9h5"/></svg>
-        <span>CIRCUIT NETS</span>
-      </div>
-      <div class="net-filters">
-        <label class="net-item active" data-net="all">
-          <span class="net-color-chip all"></span>
-          <span class="net-name">Show All Wires</span>
-        </label>
-        <label class="net-item" data-net="power">
-          <span class="net-color-chip red"></span>
-          <span class="net-name">5V & 3.3V Power</span>
-        </label>
-        <label class="net-item" data-net="ground">
-          <span class="net-color-chip black"></span>
-          <span class="net-name">GND Bus</span>
-        </label>
-        <label class="net-item" data-net="i2s">
-          <span class="net-color-chip green"></span>
-          <span class="net-name">INMP441 I2S Bus</span>
-        </label>
-        <label class="net-item" data-net="motor">
-          <span class="net-color-chip yellow"></span>
-          <span class="net-name">Haptic Driver & 5V</span>
-        </label>
-        <label class="net-item" data-net="led">
-          <span class="net-color-chip blue"></span>
-          <span class="net-name">RGB LED (CC)</span>
-        </label>
-        <label class="net-item" data-net="i2c">
-          <span class="net-color-chip teal"></span>
-          <span class="net-name">SSD1306 I2C</span>
-        </label>
-        <label class="net-item" data-net="buzzer">
-          <span class="net-color-chip purple"></span>
-          <span class="net-name">Active Buzzer</span>
-        </label>
+        <div class="diag-header-badge">
+          <span class="status-indicator live-pulse"></span>
+          <span>LIVE HARDWARE & TinyML MONITOR</span>
+        </div>
       </div>
 
-      <!-- View & Assembly Controls -->
-      <div class="view-controls-box">
+      <!-- Real-time AI Classification & Acoustic Telemetry -->
+      <div class="diag-section">
+        <div class="diag-sec-title">ACOUSTIC & TinyML ENGINE</div>
+        <div class="telemetry-grid">
+          <div class="tel-item">
+            <span class="tel-label">TINYML STATUS</span>
+            <span class="tel-val green-text" id="tel-ai-status">RUNNING (31ms)</span>
+          </div>
+          <div class="tel-item">
+            <span class="tel-label">DETECTED SOUND</span>
+            <span class="tel-val text-cyan" id="tel-detected-sound">AMBIENT (LISTENING)</span>
+          </div>
+          <div class="tel-item">
+            <span class="tel-label">CONFIDENCE</span>
+            <span class="tel-val" id="tel-confidence">---</span>
+          </div>
+          <div class="tel-item">
+            <span class="tel-label">INFERENCE TIME</span>
+            <span class="tel-val" id="tel-infer-time">31 ms (1D-CNN)</span>
+          </div>
+          <div class="tel-item">
+            <span class="tel-label">SAMPLING RATE</span>
+            <span class="tel-val">16.0 kHz • 24-bit DMA</span>
+          </div>
+          <div class="tel-item">
+            <span class="tel-label">MIC SPL / PEAK</span>
+            <span class="tel-val" id="tel-mic-val">42 dB</span>
+          </div>
+        </div>
+        <div class="progress-bar-wrap mt-xs">
+          <div class="progress-bar mic-bar" id="tel-mic-bar" style="width: 25%"></div>
+        </div>
+      </div>
+
+      <!-- Hardware Resource Monitor -->
+      <div class="diag-section mt-sm">
+        <div class="diag-sec-title">ESP32-S3 SYSTEM RESOURCES</div>
+        <div class="diag-meter-row">
+          <div class="meter-info">
+            <span class="meter-label">CPU LOAD</span>
+            <span class="meter-val" id="cpu-load-val">18% (Dual Core)</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar cpu-bar" id="cpu-bar" style="width: 18%"></div>
+          </div>
+        </div>
+        <div class="diag-meter-row mt-xs">
+          <div class="meter-info">
+            <span class="meter-label">SRAM BUFFER</span>
+            <span class="meter-val" id="ram-load-val">84 KB / 512 KB (16.4%)</span>
+          </div>
+          <div class="progress-bar-wrap">
+            <div class="progress-bar ram-bar" id="ram-bar" style="width: 16.4%"></div>
+          </div>
+        </div>
+        <div class="diag-meta-list mt-xs">
+          <div class="meta-row">
+            <span class="meta-k">ACTIVE GPIOS:</span>
+            <span class="meta-v text-cyan" id="gpio-activity-val">GPIO4, 5, 6, 14, 15-18, 21, 22</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-k">POWER SUPPLY:</span>
+            <span class="meta-v">5.0V USB VBUS (Dual Rail)</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-k">BLUETOOTH BLE:</span>
+            <span class="meta-v text-green">BLE 5.0 Synced (-42 dBm)</span>
+          </div>
+          <div class="meta-row">
+            <span class="meta-k">HAPTIC INTENSITY:</span>
+            <span class="meta-v" id="tel-haptic-val">0% (IDLE)</span>
+          </div>
+        </div>
+        <div class="progress-bar-wrap mt-xs">
+          <div class="progress-bar" id="tel-haptic-bar" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- 5-Level Breadboard Transparency Stepper -->
+      <div class="diag-section mt-sm">
+        <div class="diag-sec-title">BREADBOARD TRANSPARENCY</div>
+        <div class="transparency-stepper">
+          <button class="trans-btn active" data-opacity="1.0">100%</button>
+          <button class="trans-btn" data-opacity="0.75">75%</button>
+          <button class="trans-btn" data-opacity="0.50">50%</button>
+          <button class="trans-btn" data-opacity="0.25">25%</button>
+          <button class="trans-btn highlight" data-opacity="0.0">0% (Rails)</button>
+        </div>
+      </div>
+
+      <!-- Exploded Assembly Kinematics -->
+      <div class="diag-section mt-sm">
         <div class="control-row">
-          <span class="control-label">EXPLODED VIEW</span>
+          <span class="diag-sec-title">EXPLODED ASSEMBLY</span>
           <span class="control-val" id="val-exploded">0%</span>
         </div>
         <div class="slider-row">
           <input type="range" id="slider-exploded" min="0" max="100" value="0" class="tech-slider">
           <button class="mini-btn" id="btn-toggle-explode">Toggle</button>
-        </div>
-
-        <div class="control-row mt-sm">
-          <span class="control-label">BREADBOARD OPACITY</span>
-          <span class="control-val" id="val-opacity">100%</span>
-        </div>
-        <div class="slider-row">
-          <input type="range" id="slider-opacity" min="0" max="100" value="100" class="tech-slider">
-        </div>
-      </div>
-
-      <!-- Real-time AI & Haptic Telemetry Widget -->
-      <div class="telemetry-box">
-        <div class="telemetry-row">
-          <span class="tel-label">TINYML INFERENCE</span>
-          <span class="tel-val green-text" id="tel-ai-status">RUNNING (34ms)</span>
-        </div>
-        <div class="telemetry-row">
-          <span class="tel-label">CONFIDENCE</span>
-          <span class="tel-val" id="tel-confidence">99.2%</span>
-        </div>
-        <div class="telemetry-row">
-          <span class="tel-label">HAPTIC INTENSITY</span>
-          <span class="tel-val" id="tel-haptic-val">0% (IDLE)</span>
-        </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar" id="tel-haptic-bar" style="width: 0%"></div>
-        </div>
-        <div class="telemetry-row mt-sm">
-          <span class="tel-label">MIC SPL / PEAK</span>
-          <span class="tel-val" id="tel-mic-val">42 dB (AMBIENT)</span>
-        </div>
-        <div class="progress-bar-wrap">
-          <div class="progress-bar mic-bar" id="tel-mic-bar" style="width: 25%"></div>
-        </div>
-        <div class="telemetry-row mt-sm">
-          <span class="tel-label">BLE 5.0 COMPANION</span>
-          <span class="tel-val text-cyan">PHONE CONNECTED</span>
         </div>
       </div>
     </aside>
@@ -415,13 +491,39 @@
     <!-- Active Pin Inspection 3D HUD Floating Banner -->
     <div id="connection-hud-banner" class="connection-hud glass-panel hidden">
       <div class="hud-left">
-        <span class="hud-status-badge">INSPECTING PIN CONNECTION</span>
-        <h3 id="hud-connection-title" class="hud-title">ESP32 GPIO4 ➔ INMP441 WS</h3>
-        <p id="hud-connection-desc" class="hud-desc">Row 25, Col D ➔ Row 11, Col C | I2S Word Select Clock</p>
+        <div class="hud-badge-strip">
+          <span class="hud-status-badge">PIN CONNECTION INSPECTOR</span>
+          <span class="hud-net-badge" id="hud-net-badge">I2S BUS</span>
+        </div>
+        <div class="hud-flow-diagram">
+          <div class="flow-step">
+            <span class="step-role">ESP32 GPIO</span>
+            <span class="step-val text-cyan" id="hud-src-pin">GPIO18</span>
+          </div>
+          <span class="flow-arrow">➔</span>
+          <div class="flow-step">
+            <span class="step-role">ROUTED WIRE</span>
+            <span class="step-val" id="hud-wire-desc">Yellow Driver Wire</span>
+          </div>
+          <span class="flow-arrow">➔</span>
+          <div class="flow-step">
+            <span class="step-role">DESTINATION COMPONENT</span>
+            <span class="step-val text-yellow" id="hud-dest-comp">2N2222 Driver</span>
+          </div>
+          <span class="flow-arrow">➔</span>
+          <div class="flow-step">
+            <span class="step-role">DESTINATION PIN</span>
+            <span class="step-val text-green" id="hud-dest-pin">Base (Pin 2)</span>
+          </div>
+        </div>
+        <div class="hud-role-strip">
+          <span class="hud-role-label">PURPOSE:</span>
+          <span id="hud-connection-desc" class="hud-desc">PWM signal driving 2N2222 NPN transistor for tactile alerts</span>
+        </div>
       </div>
       <div class="hud-right">
         <button id="btn-hud-reset" class="icon-button primary-btn">
-          <span>Reset View</span>
+          <span>Close Inspector</span>
         </button>
       </div>
     </div>

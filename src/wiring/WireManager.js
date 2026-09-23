@@ -237,8 +237,8 @@ export class WireManager {
       {
         id: 'inmp_sd',
         net: 'i2s',
-        color: COLORS.green,
-        colorName: 'Green',
+        color: COLORS.purple,
+        colorName: 'Purple',
         fromPin: 'INMP441 SD',
         fromHole: 'Row 10, Col C',
         toPin: 'ESP32 GPIO6',
@@ -484,8 +484,8 @@ export class WireManager {
 
     const curve = new THREE.CatmullRomCurve3([pStart.clone(), p1, p2, p3, pEnd.clone()]);
     const sampledPoints = curve.getPoints(50);
-    // Increased tube radius to 0.062 for thick, bold, razor-sharp jumper wire rendering
-    const wireGeo = new THREE.TubeGeometry(curve, 36, 0.062, 12, false);
+    // Increased tube radius to 0.075 for thick, bold, razor-sharp jumper wire rendering
+    const wireGeo = new THREE.TubeGeometry(curve, 36, 0.075, 12, false);
 
     const wireMat = new THREE.MeshStandardMaterial({
       color: def.color,
@@ -556,7 +556,7 @@ export class WireManager {
       w.curve = new THREE.CatmullRomCurve3([pStart, p1, p2, p3, pEnd]);
       w.sampledPoints = w.curve.getPoints(50);
       w.wireMesh.geometry.dispose();
-      w.wireMesh.geometry = new THREE.TubeGeometry(w.curve, 36, 0.062, 12, false);
+      w.wireMesh.geometry = new THREE.TubeGeometry(w.curve, 36, 0.075, 12, false);
 
       w.bootStart.position.set(pStart.x, pStart.y + 0.19, pStart.z);
       w.bootEnd.position.set(pEnd.x, pEnd.y + 0.19, pEnd.z);
@@ -685,20 +685,20 @@ export class WireManager {
     this.startMarker.position.copy(record.pStart);
     this.endMarker.position.copy(record.pEnd);
 
-    // Glow the selected wire in vibrant cyan, dim everything else
+    // Glow the selected wire in vibrant cyan, dim everything else to 15% opacity
     this.wireRecords.forEach(w => {
       if (w.id === wireId) {
         w.group.visible = true;
         w.material.color.setHex(0x00f0ff);
         w.material.emissive.setHex(0x00f0ff);
-        w.material.emissiveIntensity = 1.2;
+        w.material.emissiveIntensity = 1.4;
         w.material.opacity = 1.0;
         w.material.transparent = false;
         w.group.children.forEach(c => c.visible = true);
       } else {
         w.group.visible = true;
         w.material.color.setHex(0x1e293b);
-        w.material.opacity = 0.12;
+        w.material.opacity = 0.15; // Fade all other wires to exactly 15% opacity
         w.material.transparent = true;
         w.material.emissive.setHex(0x000000);
         w.group.children.forEach(c => { if (c !== w.wireMesh) c.visible = false; });
@@ -708,6 +708,50 @@ export class WireManager {
     return {
       pStart: record.pStart,
       pEnd: record.pEnd,
+      wire: record
+    };
+  }
+
+  getPinPathway(wireId) {
+    const record = this.wireRecords.find(w => w.id === wireId);
+    if (!record) return null;
+
+    let espPin = 'ESP32 Pin';
+    let destPin = 'Destination Pin';
+    let destComp = 'Destination Component';
+
+    if (record.fromPin.includes('ESP32')) {
+      espPin = record.fromPin;
+      destPin = record.toPin;
+      destComp = record.toComp;
+    } else if (record.toPin.includes('ESP32')) {
+      espPin = record.toPin;
+      destPin = record.fromPin;
+      destComp = record.fromComp;
+    } else {
+      espPin = record.fromPin;
+      destPin = record.toPin;
+      destComp = record.toComp;
+    }
+
+    const compDisplayNames = {
+      esp32: 'ESP32-S3 DevKitC-1',
+      inmp441: 'INMP441 MEMS Microphone',
+      oled: 'SSD1306 0.96" OLED Display',
+      rgbLed: 'RGB Status Indicator LED',
+      vibeMotor: '10mm Coin Vibration Motor',
+      transCircuit: '2N2222 BJT Motor Driver',
+      buzzer: 'Active 5V Piezo Buzzer',
+      breadboard: 'Breadboard Power/GND Rails'
+    };
+
+    return {
+      espPin,
+      wireName: `${record.colorName} Wire (${record.fromHole} ➔ ${record.toHole})`,
+      destComp: compDisplayNames[destComp] || destComp,
+      destPin,
+      purpose: record.role || record.name,
+      net: record.net,
       wire: record
     };
   }
@@ -737,14 +781,17 @@ export class WireManager {
     const dummy = new THREE.Object3D();
 
     this.electrons.forEach(el => {
-      // Advance electron along wire curve
-      el.t = (el.t + el.speed * deltaTime) % 1.0;
+      // Advance electron along wire curve (pulse faster on hovered/selected wire)
+      const isHighlightedWire = (this.highlightedPin === el.wire.id);
+      const speedMult = isHighlightedWire ? 2.5 : 1.0;
+      el.t = (el.t + el.speed * speedMult * deltaTime) % 1.0;
 
       const isWireActive = (this.activeFilter === 'all' || el.wire.net === this.activeFilter);
-      if (isWireActive && el.wire.sampledPoints) {
+      if ((isWireActive || isHighlightedWire) && el.wire.sampledPoints) {
         const idx = Math.min(el.wire.sampledPoints.length - 1, Math.floor(el.t * el.wire.sampledPoints.length));
         dummy.position.copy(el.wire.sampledPoints[idx]);
-        dummy.scale.set(1, 1, 1);
+        const s = isHighlightedWire ? 1.7 : 1.0;
+        dummy.scale.set(s, s, s);
       } else {
         dummy.scale.set(0, 0, 0);
       }

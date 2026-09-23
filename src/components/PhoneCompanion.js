@@ -39,9 +39,13 @@ export class PhoneCompanion {
     this.createPhoneBody();
     this.createScreen();
 
-    // Position phone resting flat on the desk to the right of the breadboard
-    this.group.position.set(11.5, 0.23, 0);
-    this.group.rotation.y = -0.15; // Slightly angled towards the user
+    // Scale phone down to ~40% so hardware breadboard circuit remains primary focus
+    this.group.scale.set(0.42, 0.42, 0.42);
+
+    // Dock neatly to the side of the circuit on the desk surface
+    this.baseX = 11.2;
+    this.group.position.set(this.baseX, 0.1, 0.2);
+    this.group.rotation.y = -0.12; // Unobtrusive side dock angle
   }
 
   createPhoneBody() {
@@ -325,8 +329,8 @@ export class PhoneCompanion {
       const progress = this.vibrationTime / this.vibrationDuration;
       const decay = Math.max(0, 1 - progress);
       const freq = 55; // 55 Hz tactile motor buzz
-      const xOffset = Math.sin(this.vibrationTime * freq) * 0.05 * this.vibrationIntensity * decay;
-      const rotZOffset = Math.sin(this.vibrationTime * freq * 0.8) * 0.02 * this.vibrationIntensity * decay;
+      const xOffset = Math.sin(this.vibrationTime * freq) * 0.02 * this.vibrationIntensity * decay;
+      const rotZOffset = Math.sin(this.vibrationTime * freq * 0.8) * 0.012 * this.vibrationIntensity * decay;
 
       this.group.position.x = this.baseX + xOffset;
       this.group.rotation.z = rotZOffset;

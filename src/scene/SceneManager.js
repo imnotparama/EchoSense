@@ -42,14 +42,14 @@ export class SceneManager {
   }
 
   initCamera() {
-    // 34° FOV positioned closer for crisp, detailed component and pin inspection
+    // 30° FOV positioned closer so breadboard is ~35-40% larger and circuit is centered
     this.camera = new THREE.PerspectiveCamera(
-      34,
+      30,
       window.innerWidth / window.innerHeight,
-      0.1,
+      0.05, // Ultra-close near clipping plane prevents pin clipping
       100
     );
-    this.camera.position.set(0, 9.0, 11.5);
+    this.camera.position.set(0, 6.8, 8.5);
   }
 
   initControls() {
@@ -57,10 +57,10 @@ export class SceneManager {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.screenSpacePanning = true;
-    this.controls.minDistance = 2.5;
-    this.controls.maxDistance = 35;
+    this.controls.minDistance = 1.5;
+    this.controls.maxDistance = 30;
     this.controls.maxPolarAngle = Math.PI - 0.05;
-    this.controls.target.set(0.5, 0.5, 0);
+    this.controls.target.set(0, 0.4, 0); // Exact center of breadboard
     this.controls.update();
   }
 
@@ -161,37 +161,64 @@ export class SceneManager {
 
   setCameraView(viewKey) {
     const views = {
+      // 1. Engineering Top View (Orthographic-style top-down)
+      top: {
+        pos: new THREE.Vector3(0, 13.5, 0.001),
+        target: new THREE.Vector3(0, 0.4, 0)
+      },
+      // 2. Front Elevation View
+      front: {
+        pos: new THREE.Vector3(0, 3.2, 11.0),
+        target: new THREE.Vector3(0, 0.4, 0)
+      },
+      // 3. Left Profile View (INMP441 audio bus)
+      left: {
+        pos: new THREE.Vector3(-12.5, 3.5, 0),
+        target: new THREE.Vector3(0, 0.4, 0)
+      },
+      // 4. Right Profile View (Motor driver & power)
+      right: {
+        pos: new THREE.Vector3(12.5, 3.5, 0),
+        target: new THREE.Vector3(0, 0.4, 0)
+      },
+      // 5. Isometric View (Classic 30° CAD axonometric view)
+      iso: {
+        pos: new THREE.Vector3(8.5, 8.5, 8.5),
+        target: new THREE.Vector3(0, 0.4, 0)
+      },
+      // 6. Exploded View (Elevated perspective for layer clearance)
+      exploded: {
+        pos: new THREE.Vector3(0, 11.0, 12.0),
+        target: new THREE.Vector3(0, 1.2, 0)
+      },
+      // 7. Reset / Engineering Hero View
+      reset: {
+        pos: new THREE.Vector3(0, 6.8, 8.5),
+        target: new THREE.Vector3(0, 0.4, 0)
+      },
       hero: {
-        pos: new THREE.Vector3(0, 9.0, 11.5),
-        target: new THREE.Vector3(0.5, 0.5, 0)
+        pos: new THREE.Vector3(0, 6.8, 8.5),
+        target: new THREE.Vector3(0, 0.4, 0)
       },
       pins: {
-        pos: new THREE.Vector3(0.5, 9.0, 0.01),
-        target: new THREE.Vector3(0.5, 0.5, 0)
-      },
-      top: {
-        pos: new THREE.Vector3(0.5, 16.0, 0.01),
-        target: new THREE.Vector3(0.5, 0, 0)
+        pos: new THREE.Vector3(0, 7.5, 0.001),
+        target: new THREE.Vector3(0, 0.4, 0)
       },
       esp32: {
-        pos: new THREE.Vector3(0.5, 4.8, 3.8),
-        target: new THREE.Vector3(0.5, 1.0, 0)
+        pos: new THREE.Vector3(0, 3.8, 3.6),
+        target: new THREE.Vector3(0, 0.8, 0)
       },
       oled: {
-        pos: new THREE.Vector3(-1.0, 4.5, 2.5),
-        target: new THREE.Vector3(-1.0, 1.2, -1.0)
+        pos: new THREE.Vector3(-1.0, 3.8, 2.2),
+        target: new THREE.Vector3(-1.0, 1.0, -1.0)
       },
       motor: {
-        pos: new THREE.Vector3(5.5, 4.2, 3.2),
-        target: new THREE.Vector3(5.5, 0.8, 0.8)
-      },
-      phone: {
-        pos: new THREE.Vector3(11.5, 6.5, 4.5),
-        target: new THREE.Vector3(11.5, 0.2, 0)
+        pos: new THREE.Vector3(5.5, 3.6, 2.8),
+        target: new THREE.Vector3(5.5, 0.7, 0.8)
       }
     };
 
-    const targetView = views[viewKey] || views.hero;
+    const targetView = views[viewKey] || views.reset;
     this.smoothTransition(targetView.pos, targetView.target);
   }
 
