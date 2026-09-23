@@ -484,19 +484,35 @@ export class WireManager {
 
     const curve = new THREE.CatmullRomCurve3([pStart.clone(), p1, p2, p3, pEnd.clone()]);
     const sampledPoints = curve.getPoints(50);
-    // Increased tube radius to 0.075 for thick, bold, razor-sharp jumper wire rendering
-    const wireGeo = new THREE.TubeGeometry(curve, 36, 0.075, 12, false);
+    // Smooth rounded cable geometry (Wokwi-style thick jumper wire)
+    const tubeGeo = new THREE.TubeGeometry(curve, 40, 0.08, 12, false);
 
     const wireMat = new THREE.MeshStandardMaterial({
       color: def.color,
-      roughness: 0.2, // Glossy silicone jacket
-      metalness: 0.15
+      roughness: 0.35,
+      metalness: 0.05,
+      transparent: true,
+      opacity: 1.0
     });
 
-    const wireMesh = new THREE.Mesh(wireGeo, wireMat);
+    const wireMesh = new THREE.Mesh(tubeGeo, wireMat);
     wireMesh.name = `WireMesh_${def.id}`;
     wireMesh.castShadow = true;
-    wireMesh.userData = wireGroup.userData;
+    wireMesh.receiveShadow = true;
+    wireMesh.userData = {
+      id: def.id,
+      net: def.net,
+      name: def.name,
+      fromPin: def.fromPin,
+      toPin: def.toPin,
+      fromHole: def.fromHole,
+      toHole: def.toHole,
+      fromComp: def.fromComp,
+      toComp: def.toComp,
+      role: def.role,
+      colorName: def.colorName,
+      color: def.color
+    };
 
     wireGroup.add(bootStart, bootEnd, pinStart, pinEnd, wireMesh);
     this.group.add(wireGroup);
@@ -685,21 +701,23 @@ export class WireManager {
     this.startMarker.position.copy(record.pStart);
     this.endMarker.position.copy(record.pEnd);
 
-    // Glow the selected wire in vibrant cyan, dim everything else to 15% opacity
+    // Glow the selected wire in vibrant cyan, dim all other wires to 5% opacity (Connection Focus Mode)
     this.wireRecords.forEach(w => {
       if (w.id === wireId) {
         w.group.visible = true;
         w.material.color.setHex(0x00f0ff);
         w.material.emissive.setHex(0x00f0ff);
-        w.material.emissiveIntensity = 1.4;
+        w.material.emissiveIntensity = 1.6;
         w.material.opacity = 1.0;
         w.material.transparent = false;
+        w.material.depthWrite = true;
         w.group.children.forEach(c => c.visible = true);
       } else {
         w.group.visible = true;
         w.material.color.setHex(0x1e293b);
-        w.material.opacity = 0.15; // Fade all other wires to exactly 15% opacity
+        w.material.opacity = 0.05; // Drop to 5% transparent (nearly invisible)
         w.material.transparent = true;
+        w.material.depthWrite = false;
         w.material.emissive.setHex(0x000000);
         w.group.children.forEach(c => { if (c !== w.wireMesh) c.visible = false; });
       }
@@ -710,6 +728,55 @@ export class WireManager {
       pEnd: record.pEnd,
       wire: record
     };
+  }
+
+  /**
+   * Isolate signal connection by pin or signal name (e.g. 'GPIO4', 'WS', 'GPIO18', 'SCK')
+   * @param {string} pinQuery
+   * @returns {Object|null} pathway details
+   */
+  isolatePin(pinQuery) {
+    if (!pinQuery) {
+      this.resetHighlight();
+      return null;
+    }
+    const q = pinQuery.toLowerCase().trim();
+
+    // Map common aliases
+    const aliasMap = {
+      'gpio4': 'inmp_ws',
+      'ws': 'inmp_ws',
+      'gpio5': 'inmp_sck',
+      'sck': 'inmp_sck',
+      'gpio6': 'inmp_sd',
+      'sd': 'inmp_sd',
+      'gpio18': 'motor_ctrl',
+      'motor': 'motor_ctrl',
+      'gpio21': 'oled_sda',
+      'sda': 'oled_sda',
+      'gpio22': 'oled_scl',
+      'scl': 'oled_scl',
+      'gpio14': 'buzzer_sig',
+      'buzzer': 'buzzer_sig',
+      '3v3': 'pwr_3v3',
+      '5v': 'pwr_5v',
+      'gnd': 'gnd_top'
+    };
+
+    let targetId = aliasMap[q];
+    if (!targetId) {
+      const found = this.wireRecords.find(w =>
+        w.id.toLowerCase() === q ||
+        w.fromPin.toLowerCase().includes(q) ||
+        w.toPin.toLowerCase().includes(q)
+      );
+      if (found) targetId = found.id;
+    }
+
+    if (!targetId) return null;
+
+    this.highlightConnection(targetId);
+    return this.getPinPathway(targetId);
   }
 
   getPinPathway(wireId) {

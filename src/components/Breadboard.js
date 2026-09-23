@@ -59,10 +59,11 @@ export class Breadboard {
     const geometry = new THREE.ExtrudeGeometry(shape, extrudeSettings);
     geometry.rotateX(-Math.PI / 2); // Extrude upwards from Y=0 to Y=this.height
 
+    // Sleek matte engineering carrier plate (Dark Slate / Anodized Aluminum / Matte PCB)
     const material = new THREE.MeshStandardMaterial({
-      color: 0xf4f1ea,
-      roughness: 0.45,
-      metalness: 0.02,
+      color: 0x141a24,
+      roughness: 0.65,
+      metalness: 0.2,
       transparent: true,
       opacity: 1.0
     });
@@ -77,8 +78,9 @@ export class Breadboard {
     // Center divider trough (indent)
     const troughGeo = new THREE.BoxGeometry(this.length - 0.6, 0.15, 0.28);
     const troughMat = new THREE.MeshStandardMaterial({
-      color: 0xd8d4cb,
-      roughness: 0.6,
+      color: 0x0c1017,
+      roughness: 0.75,
+      metalness: 0.1,
       transparent: true,
       opacity: 1.0
     });
@@ -91,8 +93,9 @@ export class Breadboard {
     // Side power rail separators (two indents separating power buses from terminal strips)
     const sepGeo = new THREE.BoxGeometry(this.length - 0.6, 0.08, 0.12);
     const sepMat = new THREE.MeshStandardMaterial({
-      color: 0xdcd8cf,
-      roughness: 0.6,
+      color: 0x0f141f,
+      roughness: 0.75,
+      metalness: 0.1,
       transparent: true,
       opacity: 1.0
     });
@@ -107,6 +110,30 @@ export class Breadboard {
     sepBot.position.set(0, this.height - 0.03, 1.7);
     this.group.add(sepBot);
     this.sepBotMesh = sepBot;
+
+    // Add 4 brass corner mounting screws/standoffs for authentic commercial hardware look
+    this.createCornerScrews();
+  }
+
+  createCornerScrews() {
+    const screwGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.12, 16);
+    const screwMat = new THREE.MeshStandardMaterial({
+      color: 0xd4af37, // Polished brass
+      roughness: 0.3,
+      metalness: 0.85
+    });
+    const corners = [
+      { x: -this.length / 2 + 0.35, z: -this.width / 2 + 0.35 },
+      { x: this.length / 2 - 0.35, z: -this.width / 2 + 0.35 },
+      { x: -this.length / 2 + 0.35, z: this.width / 2 - 0.35 },
+      { x: this.length / 2 - 0.35, z: this.width / 2 - 0.35 }
+    ];
+
+    corners.forEach(pos => {
+      const screw = new THREE.Mesh(screwGeo, screwMat);
+      screw.position.set(pos.x, this.height + 0.02, pos.z);
+      this.group.add(screw);
+    });
   }
 
   createFacePlate() {
@@ -116,8 +143,8 @@ export class Breadboard {
     canvas.height = 2048;
     const ctx = canvas.getContext('2d');
 
-    // Background matching breadboard plastic
-    ctx.fillStyle = '#f4f1ea';
+    // Background matching sleek dark engineering carrier plate
+    ctx.fillStyle = '#141a24';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Coordinate conversion utilities
@@ -127,7 +154,7 @@ export class Breadboard {
     const toCanvasX = (cmX) => (cmX + this.length / 2) * scaleX;
     const toCanvasZ = (cmZ) => (cmZ + this.width / 2) * scaleZ;
 
-    // Draw power rail stripes (Red = +, Blue = -)
+    // Draw power rail stripes (Red = +, Cyan = -)
     // Red line for +top (Z = -2.45)
     ctx.strokeStyle = '#ef4444';
     ctx.lineWidth = 8;
@@ -136,8 +163,8 @@ export class Breadboard {
     ctx.lineTo(toCanvasX(7.5), toCanvasZ(-2.45));
     ctx.stroke();
 
-    // Blue line for -top (Z = -1.85)
-    ctx.strokeStyle = '#2563eb';
+    // Electric Cyan line for -top (Z = -1.85)
+    ctx.strokeStyle = '#06b6d4';
     ctx.lineWidth = 8;
     ctx.beginPath();
     ctx.moveTo(toCanvasX(-7.5), toCanvasZ(-1.85));
@@ -152,8 +179,8 @@ export class Breadboard {
     ctx.lineTo(toCanvasX(7.5), toCanvasZ(1.85));
     ctx.stroke();
 
-    // Blue line for -bot (Z = 2.45)
-    ctx.strokeStyle = '#2563eb';
+    // Electric Cyan line for -bot (Z = 2.45)
+    ctx.strokeStyle = '#06b6d4';
     ctx.lineWidth = 8;
     ctx.beginPath();
     ctx.moveTo(toCanvasX(-7.5), toCanvasZ(2.45));
@@ -171,14 +198,14 @@ export class Breadboard {
       ctx.fillText('+', toCanvasX(x), toCanvasZ(1.85));
     });
 
-    ctx.fillStyle = '#2563eb';
+    ctx.fillStyle = '#06b6d4';
     [-7.8, -4, 0, 4, 7.8].forEach(x => {
       ctx.fillText('—', toCanvasX(x), toCanvasZ(-1.85));
       ctx.fillText('—', toCanvasX(x), toCanvasZ(2.45));
     });
 
-    // Column letters (A B C D E / F G H I J) at multiple intervals across the breadboard
-    ctx.fillStyle = '#0f172a';
+    // Column letters (A B C D E / F G H I J) in crisp off-white silkscreen
+    ctx.fillStyle = '#e2e8f0';
     ctx.font = 'bold 42px sans-serif';
 
     const colsTop = ['A', 'B', 'C', 'D', 'E'];
@@ -196,9 +223,9 @@ export class Breadboard {
       });
     });
 
-    // Row numbers along the center trough and outer boundaries (1, 5, 10, 15... 60, 63)
+    // Row numbers along the center trough and outer boundaries (1, 5, 10... 63)
     ctx.font = 'bold 34px monospace';
-    ctx.fillStyle = '#090d16';
+    ctx.fillStyle = '#94a3b8';
 
     for (let r = 1; r <= 63; r++) {
       const x = this.getRowX(r);
@@ -214,7 +241,7 @@ export class Breadboard {
         ctx.fillText(str, toCanvasX(x), toCanvasZ(1.65));
       } else {
         // Subtle tick mark for every single row
-        ctx.strokeStyle = '#94a3b8';
+        ctx.strokeStyle = '#475569';
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(toCanvasX(x), toCanvasZ(-0.25));
@@ -225,8 +252,8 @@ export class Breadboard {
       }
     }
 
-    // Subtle hole socket guide rings on canvas
-    ctx.strokeStyle = 'rgba(148, 163, 184, 0.4)';
+    // Gold ENIG contact socket guide rings on canvas
+    ctx.strokeStyle = 'rgba(212, 175, 55, 0.45)';
     ctx.lineWidth = 2;
     const allCols = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
     for (let r = 1; r <= 63; r++) {

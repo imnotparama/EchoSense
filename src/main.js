@@ -74,16 +74,18 @@ class EchoSenseApp {
     this.oled = new OLEDDisplay(this.breadboard);
     this.sceneMgr.scene.add(this.oled.group);
 
-    // 10. 3D Smartphone Companion (BLE Receiver on desk)
+    // 10. 3D Smartphone Companion (Detached to floating mobile view window)
     this.phone = new PhoneCompanion();
+    this.phone.group.visible = false;
     this.sceneMgr.scene.add(this.phone.group);
 
     // 11. Realistic Jumper Wire Routing System (with animated electron flow & inspector)
     this.wireManager = new WireManager(this.breadboard);
     this.sceneMgr.scene.add(this.wireManager.group);
 
-    // 12. 3D Floating Engineering Labels with Leader Lines
+    // 12. 3D Floating Engineering Labels (hidden by default to eliminate persistent scene clutter)
     this.floatingLabels = new FloatingLabels(this.breadboard, this.sceneMgr.camera);
+    this.floatingLabels.group.visible = false;
     this.sceneMgr.scene.add(this.floatingLabels.group);
 
     // 13. Explosion Manager for SolidWorks style vertical lift
@@ -114,7 +116,6 @@ class EchoSenseApp {
       this.rgbLed.group,
       this.vibeMotor.group,
       this.buzzer.group,
-      this.phone.group,
       ...this.capacitors.group.children,
       ...this.transCircuit.group.children
     ];
@@ -194,7 +195,7 @@ class EchoSenseApp {
         }
       }
 
-      // 2. Check all interactive components to open the details drawer
+      // 2. Check all interactive components to open sidebar pinout and isolate circuit
       const intersects = this.raycaster.intersectObjects(this.interactiveObjects, true);
       if (intersects.length > 0) {
         let root = intersects[0].object;
@@ -203,7 +204,23 @@ class EchoSenseApp {
         }
         if (root && root.userData?.name) {
           this.activeComponentMesh = root;
-          this.ui.showDrawer(root.userData);
+
+          // Map component name to sidebar key
+          const compMap = {
+            'ESP32-S3 DevKitC-1': 'esp32',
+            'INMP441 I2S Digital MEMS Microphone': 'inmp441',
+            'SSD1306 0.96" OLED Display (128x64)': 'oled',
+            '5mm Common Cathode RGB LED': 'rgbLed',
+            '10mm Coin Vibration Motor': 'vibeMotor',
+            'Active Piezo Buzzer': 'buzzer',
+            '2N2222 NPN BJT Transistor': 'transCircuit'
+          };
+          const key = compMap[root.userData.name] || 'esp32';
+          this.ui.populateSidebarPinout(key);
+          document.querySelectorAll('.module-item').forEach(m => {
+            if (m.getAttribute('data-comp') === key) m.classList.add('active');
+            else m.classList.remove('active');
+          });
 
           // Isolate circuit path for this component
           this.isolateComponentCircuit(root.userData.name);
@@ -309,6 +326,50 @@ class EchoSenseApp {
     const pathway = this.wireManager.getPinPathway(wireId);
     if (pathway) {
       this.ui.showPinInspector(pathway);
+      if (pathway.destComp) {
+        this.isolateComponentCircuit(pathway.destComp);
+      }
+    }
+  }
+
+  /**
+   * Focus a specific GPIO or signal pin (e.g. GPIO4, WS, GPIO18)
+   */
+  focusPinConnection(pinKey) {
+    const pathway = this.wireManager.isolatePin(pinKey);
+    if (pathway) {
+      this.activeInspectedWireId = pathway.wire?.id || pathway.wireId;
+      this.ui.showPinInspector(pathway);
+      if (pathway.wire) {
+        this.sceneMgr.focusOnPinConnection(pathway.wire.pStart, pathway.wire.pEnd);
+      }
+      if (pathway.destComp) {
+        this.isolateComponentCircuit(pathway.destComp);
+      }
+    } else {
+      this.resetPinInspection();
+    }
+  }
+
+  /**
+   * Select a component from the sidebar list
+   */
+  selectComponent(compKey) {
+    const compMap = {
+      esp32: { group: this.esp32.group, name: 'ESP32-S3 DevKitC-1' },
+      inmp441: { group: this.inmp441.group, name: 'INMP441 I2S Digital MEMS Microphone' },
+      oled: { group: this.oled.group, name: 'SSD1306 0.96" OLED Display (128x64)' },
+      rgbLed: { group: this.rgbLed.group, name: '5mm Common Cathode RGB LED' },
+      vibeMotor: { group: this.vibeMotor.group, name: '10mm Coin Vibration Motor' },
+      buzzer: { group: this.buzzer.group, name: 'Active Piezo Buzzer' },
+      transCircuit: { group: this.transCircuit.group, name: '2N2222 NPN BJT Transistor' }
+    };
+
+    const target = compMap[compKey];
+    if (target) {
+      this.activeComponentMesh = target.group;
+      this.sceneMgr.focusOnObject(target.group);
+      this.isolateComponentCircuit(target.name);
     }
   }
 
@@ -445,31 +506,14 @@ class EchoSenseApp {
         this.resetComponentDimming();
         this.wireManager.filterNet(netKey);
       },
+      onFocusPin: (pinKey) => this.focusPinConnection(pinKey),
+      onComponentSelect: (compKey) => this.selectComponent(compKey),
       onTriggerAlert: (alertType) => this.triggerAlert(alertType),
       onToggleAudio: () => this.soundSynth.toggleMute(),
-      onExplodeChange: (factor) => this.explosionMgr.setFactor(factor),
-      onToggleExplode: () => this.explosionMgr.toggle(),
       onOpacityChange: (alpha) => this.breadboard.setOpacity(alpha),
-      onToggleXRay: () => this.sceneMgr.toggleXRay(),
-      onToggleLabels: () => this.floatingLabels.toggle(),
       onToggleSchematic: () => this.schematicView.toggle(),
-      onPlayStory: (soundType) => this.storySim.playStory(soundType),
-      onStopStory: () => this.storySim.stop(),
-      onFocusComponent: () => {
-        if (this.activeComponentMesh) {
-          this.sceneMgr.focusOnObject(this.activeComponentMesh);
-        }
-      },
-      onIsolateCircuit: (data) => {
-        this.isolateComponentCircuit(data.name);
-      },
-      onResetInspection: () => {
-        this.resetPinInspection();
-      }
+      onResetInspection: () => this.resetPinInspection()
     });
-
-    // Initialize Pin Connections Modal & Wiring Map
-    this.pinModal = new PinConnectionsModal(this);
 
     // Reset HUD banner button
     document.getElementById('btn-hud-reset')?.addEventListener('click', () => {
