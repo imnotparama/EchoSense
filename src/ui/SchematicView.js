@@ -128,7 +128,12 @@ export class SchematicView {
       node.addEventListener('click', () => {
         const pinKey = node.getAttribute('data-pin') || node.getAttribute('data-net');
         if (pinKey) {
-          this.app.wireManager.highlightPath(pinKey);
+          // Full two-way sync: trigger 3D pin focus and Manhattan wire glow
+          if (this.app.focusPinConnection) {
+            this.app.focusPinConnection(pinKey);
+          } else {
+            this.app.wireManager.highlightPath(pinKey);
+          }
 
           // Visual highlight in SVG
           this.container.querySelectorAll('.sch-pin, .sch-node').forEach(n => n.classList.remove('active-sch'));

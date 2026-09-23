@@ -42,14 +42,40 @@ export class SceneManager {
   }
 
   initCamera() {
-    // 30° FOV positioned closer so breadboard is ~35-40% larger and circuit is centered
-    this.camera = new THREE.PerspectiveCamera(
-      30,
-      window.innerWidth / window.innerHeight,
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    const aspect = width / height;
+
+    // 1. Perspective Camera (calibrated so board occupies >=80% of screen)
+    this.perspectiveCamera = new THREE.PerspectiveCamera(
+      28,
+      aspect,
       0.05, // Ultra-close near clipping plane prevents pin clipping
       100
     );
-    this.camera.position.set(0, 6.8, 8.5);
+    this.perspectiveCamera.position.set(0, 5.8, 7.2);
+
+    // 2. True Flat Orthographic Camera (Wokwi / KiCad style 2D view, zero perspective distortion)
+    const boardW = 18.5;
+    const boardH = 10.5;
+    let halfW, halfH;
+    if (aspect >= boardW / boardH) {
+      halfH = boardH / 2;
+      halfW = halfH * aspect;
+    } else {
+      halfW = boardW / 2;
+      halfH = halfW / aspect;
+    }
+
+    this.orthoCamera = new THREE.OrthographicCamera(
+      -halfW, halfW, halfH, -halfH, 0.05, 100
+    );
+    this.orthoCamera.position.set(0, 18, 0.0001);
+    this.orthoCamera.lookAt(0, 0, 0);
+
+    // Active camera starts in perspective
+    this.camera = this.perspectiveCamera;
+    this.isOrthoMode = false;
   }
 
   initControls() {
@@ -57,10 +83,10 @@ export class SceneManager {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.05;
     this.controls.screenSpacePanning = true;
-    this.controls.minDistance = 1.5;
-    this.controls.maxDistance = 30;
+    this.controls.minDistance = 1.2;
+    this.controls.maxDistance = 25;
     this.controls.maxPolarAngle = Math.PI - 0.05;
-    this.controls.target.set(0, 0.4, 0); // Exact center of breadboard
+    this.controls.target.set(0, 0.4, 0); // Center of circuit
     this.controls.update();
   }
 
@@ -160,61 +186,63 @@ export class SceneManager {
   }
 
   setCameraView(viewKey) {
+    if (viewKey === 'top') {
+      // Switch to True Flat Orthographic Camera (Wokwi / 2D PCB layout style)
+      this.isOrthoMode = true;
+      this.camera = this.orthoCamera;
+      this.controls.object = this.orthoCamera;
+      this.controls.enableRotate = false; // Pure 2D pan/zoom with zero angular parallax!
+      this.controls.target.set(0, 0, 0);
+      this.orthoCamera.position.set(0, 18, 0.0001);
+      this.orthoCamera.zoom = 1.0;
+      this.orthoCamera.updateProjectionMatrix();
+      this.controls.update();
+      return;
+    }
+
+    // Perspective 3D views
+    if (this.isOrthoMode) {
+      this.isOrthoMode = false;
+      this.camera = this.perspectiveCamera;
+      this.controls.object = this.perspectiveCamera;
+      this.controls.enableRotate = true;
+    }
+
     const views = {
-      // 1. Engineering Top View (Orthographic-style top-down)
+      // 1. Perspective Top
       top: {
         pos: new THREE.Vector3(0, 13.5, 0.001),
         target: new THREE.Vector3(0, 0.4, 0)
       },
       // 2. Front Elevation View
       front: {
-        pos: new THREE.Vector3(0, 3.2, 11.0),
+        pos: new THREE.Vector3(0, 2.5, 9.5),
         target: new THREE.Vector3(0, 0.4, 0)
       },
       // 3. Left Profile View (INMP441 audio bus)
       left: {
-        pos: new THREE.Vector3(-12.5, 3.5, 0),
+        pos: new THREE.Vector3(-10.5, 3.2, 0),
         target: new THREE.Vector3(0, 0.4, 0)
       },
       // 4. Right Profile View (Motor driver & power)
       right: {
-        pos: new THREE.Vector3(12.5, 3.5, 0),
+        pos: new THREE.Vector3(10.5, 3.2, 0),
         target: new THREE.Vector3(0, 0.4, 0)
       },
       // 5. Isometric View (Classic 30° CAD axonometric view)
       iso: {
-        pos: new THREE.Vector3(8.5, 8.5, 8.5),
+        pos: new THREE.Vector3(7.2, 7.2, 7.2),
         target: new THREE.Vector3(0, 0.4, 0)
       },
       // 6. Exploded View (Elevated perspective for layer clearance)
       exploded: {
-        pos: new THREE.Vector3(0, 11.0, 12.0),
+        pos: new THREE.Vector3(0, 11.0, 10.5),
         target: new THREE.Vector3(0, 1.2, 0)
       },
-      // 7. Reset / Engineering Hero View
+      // 7. Reset / Engineering Hero View (Circuit occupies >=80% viewport)
       reset: {
-        pos: new THREE.Vector3(0, 6.8, 8.5),
+        pos: new THREE.Vector3(0, 5.8, 7.2),
         target: new THREE.Vector3(0, 0.4, 0)
-      },
-      hero: {
-        pos: new THREE.Vector3(0, 6.8, 8.5),
-        target: new THREE.Vector3(0, 0.4, 0)
-      },
-      pins: {
-        pos: new THREE.Vector3(0, 7.5, 0.001),
-        target: new THREE.Vector3(0, 0.4, 0)
-      },
-      esp32: {
-        pos: new THREE.Vector3(0, 3.8, 3.6),
-        target: new THREE.Vector3(0, 0.8, 0)
-      },
-      oled: {
-        pos: new THREE.Vector3(-1.0, 3.8, 2.2),
-        target: new THREE.Vector3(-1.0, 1.0, -1.0)
-      },
-      motor: {
-        pos: new THREE.Vector3(5.5, 3.6, 2.8),
-        target: new THREE.Vector3(5.5, 0.7, 0.8)
       }
     };
 
@@ -223,14 +251,23 @@ export class SceneManager {
   }
 
   focusOnObject(obj3D) {
+    if (this.isOrthoMode) {
+      const box = new THREE.Box3().setFromObject(obj3D);
+      const center = new THREE.Vector3();
+      box.getCenter(center);
+      this.controls.target.copy(center);
+      this.controls.update();
+      return;
+    }
+
     const box = new THREE.Box3().setFromObject(obj3D);
     const center = new THREE.Vector3();
     box.getCenter(center);
 
     const targetPos = new THREE.Vector3(
-      center.x + 2.2,
-      center.y + 3.2,
-      center.z + 3.5
+      center.x + 1.8,
+      center.y + 2.5,
+      center.z + 2.8
     );
 
     this.smoothTransition(targetPos, center);
@@ -242,18 +279,24 @@ export class SceneManager {
     const midZ = (pStart.z + pEnd.z) / 2;
     const center = new THREE.Vector3(midX, midY, midZ);
     const dist = pStart.distanceTo(pEnd);
-    const zoomHeight = Math.max(3.5, dist * 0.75 + 2.2);
 
+    if (this.isOrthoMode) {
+      this.controls.target.copy(center);
+      this.controls.update();
+      return;
+    }
+
+    const zoomHeight = Math.max(3.2, dist * 0.65 + 1.8);
     const targetPos = new THREE.Vector3(
       midX,
       midY + zoomHeight,
-      midZ + 2.6
+      midZ + 2.2
     );
 
-    this.smoothTransition(targetPos, center, 800);
+    this.smoothTransition(targetPos, center, 750);
   }
 
-  smoothTransition(newPos, newTarget, duration = 1000) {
+  smoothTransition(newPos, newTarget, duration = 900) {
     if (this.currentCameraTween) this.currentCameraTween.stop();
     if (this.currentTargetTween) this.currentTargetTween.stop();
 
@@ -272,15 +315,16 @@ export class SceneManager {
   toggleXRay() {
     this.isXRay = !this.isXRay;
 
-    const xrayMat = new THREE.MeshPhysicalMaterial({
-      color: 0x00f0ff,
-      emissive: 0x002244,
-      emissiveIntensity: 0.4,
+    const xrayGhostMat = new THREE.MeshPhysicalMaterial({
+      color: 0x38bdf8,
+      emissive: 0x031d36,
+      emissiveIntensity: 0.25,
       roughness: 0.1,
-      metalness: 0.2,
-      transmission: 0.85,
+      metalness: 0.1,
+      transmission: 0.88,
       transparent: true,
-      opacity: 0.35,
+      opacity: 0.12,
+      depthWrite: false,
       ior: 1.4
     });
 
@@ -288,8 +332,13 @@ export class SceneManager {
       const isWireOrPin =
         node.name?.includes('Wire') ||
         node.name?.includes('Jumper') ||
+        node.name?.includes('Pin') ||
+        node.name?.includes('Boot') ||
+        node.name?.includes('Clip') ||
+        node.name?.includes('Internal_Clips') ||
         node.parent?.name?.includes('Wire') ||
         node.parent?.name?.includes('Jumper') ||
+        node.parent?.name?.includes('InternalMetalClips') ||
         node.userData?.net !== undefined;
 
       if (node.isMesh && node !== this.floor && !isWireOrPin) {
@@ -297,7 +346,7 @@ export class SceneManager {
           if (!this.originalMaterials.has(node)) {
             this.originalMaterials.set(node, node.material);
           }
-          node.material = xrayMat;
+          node.material = xrayGhostMat;
         } else {
           if (this.originalMaterials.has(node)) {
             node.material = this.originalMaterials.get(node);
@@ -313,9 +362,28 @@ export class SceneManager {
     window.addEventListener('resize', () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
+      const aspect = width / height;
 
-      this.camera.aspect = width / height;
-      this.camera.updateProjectionMatrix();
+      // Update Perspective Camera
+      this.perspectiveCamera.aspect = aspect;
+      this.perspectiveCamera.updateProjectionMatrix();
+
+      // Update Orthographic Camera
+      const boardW = 18.5;
+      const boardH = 10.5;
+      let halfW, halfH;
+      if (aspect >= boardW / boardH) {
+        halfH = boardH / 2;
+        halfW = halfH * aspect;
+      } else {
+        halfW = boardW / 2;
+        halfH = halfW / aspect;
+      }
+      this.orthoCamera.left = -halfW;
+      this.orthoCamera.right = halfW;
+      this.orthoCamera.top = halfH;
+      this.orthoCamera.bottom = -halfH;
+      this.orthoCamera.updateProjectionMatrix();
 
       const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
       this.renderer.setPixelRatio(dpr);

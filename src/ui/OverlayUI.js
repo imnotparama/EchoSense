@@ -47,10 +47,17 @@ export class OverlayUI {
     this.notifDesc = document.getElementById('notif-desc');
     this.notifHaptic = document.getElementById('notif-haptic-pattern');
 
+    // Signal Flow Architecture Modal
+    this.signalFlowModal = document.getElementById('signal-flow-view');
+
     // Modal & Audio
     this.modalEl = document.getElementById('pinout-modal');
     this.audioBtn = document.getElementById('btn-audio-toggle');
     this.audioLabel = document.getElementById('audio-btn-label');
+    this.xrayBtn = document.getElementById('btn-xray-toggle');
+    this.xrayLabel = document.getElementById('xray-label');
+    this.explodeBtn = document.getElementById('btn-explode-toggle');
+    this.explodeLabel = document.getElementById('explode-label');
 
     this.initPinSpecsMap();
     this.initEvents();
@@ -63,71 +70,92 @@ export class OverlayUI {
     this.pinSpecsMap = {
       inmp441: {
         name: 'INMP441 I2S MICROPHONE',
+        sub: '24-bit Digital Audio MEMS Transducer',
+        protocol: 'I²S Bus (16 kHz)',
+        voltage: '3.3V DC',
         pins: [
-          { name: 'VDD', target: '3.3V Power Rail', pinKey: '3V3', color: 'red' },
-          { name: 'GND', target: 'Ground Rail', pinKey: 'GND', color: 'black' },
-          { name: 'WS', target: 'ESP32 GPIO4', pinKey: 'GPIO4', color: 'green' },
-          { name: 'SCK', target: 'ESP32 GPIO5', pinKey: 'GPIO5', color: 'green' },
-          { name: 'SD', target: 'ESP32 GPIO6', pinKey: 'GPIO6', color: 'purple' },
-          { name: 'L/R', target: 'Ground (Left Ch)', pinKey: 'GND', color: 'black' }
+          { name: 'VDD', role: 'Analog & Digital Power', target: '3.3V Power Rail', pinKey: '3V3', color: 'Red', proto: 'Power' },
+          { name: 'GND', role: 'Digital Ground Reference', target: 'Top - GND Rail', pinKey: 'GND', color: 'Black', proto: 'GND' },
+          { name: 'WS', role: 'Left/Right Frame Sync Clock', target: 'ESP32 GPIO4', pinKey: 'GPIO4', color: 'Green', proto: 'I²S Clock' },
+          { name: 'SCK', role: 'Serial Continuous Bit Clock', target: 'ESP32 GPIO5', pinKey: 'GPIO5', color: 'Green', proto: 'I²S Clock' },
+          { name: 'SD', role: '24-bit Serial Audio Data Stream', target: 'ESP32 GPIO6', pinKey: 'GPIO6', color: 'Purple', proto: 'I²S Data' },
+          { name: 'L/R', role: 'Channel Select (GND=Left)', target: 'Top - GND Rail', pinKey: 'GND', color: 'Black', proto: 'GND' }
         ]
       },
       esp32: {
         name: 'ESP32-S3 DevKitC-1',
+        sub: 'Xtensa Dual-Core 240MHz • TinyML DSP',
+        protocol: 'I²S / I²C / GPIO / BLE',
+        voltage: '5.0V USB / 3.3V Core',
         pins: [
-          { name: '3V3', target: 'Top + 3.3V Rail', pinKey: '3V3', color: 'red' },
-          { name: '5V', target: 'Bottom + 5V Rail', pinKey: '5V', color: 'red' },
-          { name: 'GND', target: 'Ground Rail', pinKey: 'GND', color: 'black' },
-          { name: 'GPIO4', target: 'INMP441 WS', pinKey: 'GPIO4', color: 'green' },
-          { name: 'GPIO5', target: 'INMP441 SCK', pinKey: 'GPIO5', color: 'green' },
-          { name: 'GPIO6', target: 'INMP441 SD', pinKey: 'GPIO6', color: 'purple' },
-          { name: 'GPIO14', target: 'Active Buzzer (+)', pinKey: 'GPIO14', color: 'blue' },
-          { name: 'GPIO18', target: '2N2222 Base (1kΩ)', pinKey: 'GPIO18', color: 'yellow' },
-          { name: 'GPIO21', target: 'OLED SDA (I2C)', pinKey: 'GPIO21', color: 'teal' },
-          { name: 'GPIO22', target: 'OLED SCL (I2C)', pinKey: 'GPIO22', color: 'teal' }
+          { name: '3V3', role: 'Regulated 3.3V LDO Output', target: 'Top + 3.3V Rail', pinKey: '3V3', color: 'Red', proto: 'Power' },
+          { name: '5V', role: 'Raw 5V USB VBUS Power', target: 'Bottom + 5V Rail', pinKey: '5V', color: 'Red', proto: 'Power' },
+          { name: 'GND', role: 'Common Return Reference', target: 'Ground Rail', pinKey: 'GND', color: 'Black', proto: 'GND' },
+          { name: 'GPIO4', role: 'I2S Word Select (WS)', target: 'INMP441 WS', pinKey: 'GPIO4', color: 'Green', proto: 'I²S' },
+          { name: 'GPIO5', role: 'I2S Serial Clock (SCK)', target: 'INMP441 SCK', pinKey: 'GPIO5', color: 'Green', proto: 'I²S' },
+          { name: 'GPIO6', role: 'I2S Serial Data (SD)', target: 'INMP441 SD', pinKey: 'GPIO6', color: 'Purple', proto: 'I²S' },
+          { name: 'GPIO14', role: 'Active Buzzer Pulse Drive', target: 'Piezo Buzzer (+)', pinKey: 'GPIO14', color: 'Blue', proto: 'GPIO' },
+          { name: 'GPIO18', role: 'Motor PWM Sinking Control', target: '2N2222 Base (1kΩ)', pinKey: 'GPIO18', color: 'Yellow', proto: 'PWM' },
+          { name: 'GPIO21', role: 'I2C Serial Data (SDA)', target: 'SSD1306 SDA', pinKey: 'GPIO21', color: 'Teal', proto: 'I²C' },
+          { name: 'GPIO22', role: 'I2C Serial Clock (SCL)', target: 'SSD1306 SCL', pinKey: 'GPIO22', color: 'Teal', proto: 'I²C' }
         ]
       },
       oled: {
-        name: 'SSD1306 0.96" OLED',
+        name: 'SSD1306 0.96" OLED DISPLAY',
+        sub: '128x64 Monochrome HUD Framebuffer',
+        protocol: 'I²C Bus (0x3C)',
+        voltage: '3.3V DC',
         pins: [
-          { name: 'VCC', target: '3.3V Power Rail', pinKey: '3V3', color: 'red' },
-          { name: 'GND', target: 'Ground Rail', pinKey: 'GND', color: 'black' },
-          { name: 'SDA', target: 'ESP32 GPIO21', pinKey: 'GPIO21', color: 'teal' },
-          { name: 'SCL', target: 'ESP32 GPIO22', pinKey: 'GPIO22', color: 'teal' }
+          { name: 'VCC', role: 'Display Controller & Charge Pump', target: 'Top + 3.3V Rail', pinKey: '3V3', color: 'Red', proto: 'Power' },
+          { name: 'GND', role: 'Logic Ground Reference', target: 'Top - GND Rail', pinKey: 'GND', color: 'Black', proto: 'GND' },
+          { name: 'SDA', role: 'I2C Serial Data Line (400 kHz)', target: 'ESP32 GPIO21', pinKey: 'GPIO21', color: 'Teal', proto: 'I²C' },
+          { name: 'SCL', role: 'I2C Serial Clock Line (400 kHz)', target: 'ESP32 GPIO22', pinKey: 'GPIO22', color: 'Teal', proto: 'I²C' }
         ]
       },
       vibeMotor: {
-        name: '10mm COIN MOTOR & DRIVER',
+        name: '10mm COIN VIBRATION MOTOR',
+        sub: '5V ERM Tactile Haptic Actuator',
+        protocol: 'Low-Side Transistor PWM',
+        voltage: '5.0V USB',
         pins: [
-          { name: 'Motor (+)', target: '5V Power Rail', pinKey: '5V', color: 'red' },
-          { name: 'Motor (-)', target: '2N2222 Collector', pinKey: 'GPIO18', color: 'yellow' },
-          { name: 'Base', target: '1kΩ ➔ ESP32 GPIO18', pinKey: 'GPIO18', color: 'yellow' },
-          { name: 'Emitter', target: 'Ground Rail', pinKey: 'GND', color: 'black' }
+          { name: 'Motor (+)', role: '5V High-Current Supply & Diode Cathode', target: 'Bottom + 5V Rail', pinKey: '5V', color: 'Red', proto: 'Power' },
+          { name: 'Motor (-)', role: 'Switched Ground via Transistor', target: '2N2222 Collector', pinKey: 'GPIO18', color: 'Yellow', proto: 'Actuator' },
+          { name: 'Base', role: '1kΩ Current-Limiting Base Drive', target: 'ESP32 GPIO18', pinKey: 'GPIO18', color: 'Yellow', proto: 'PWM' },
+          { name: 'Emitter', role: 'Ground Return Sink', target: 'Bottom - GND Rail', pinKey: 'GND', color: 'Black', proto: 'GND' }
         ]
       },
       rgbLed: {
-        name: 'COMMON CATHODE RGB LED',
+        name: 'COMMON CATHODE RGB STATUS LED',
+        sub: 'Visual Multi-Color Alert Indicator',
+        protocol: 'Current-Limited GPIO Output',
+        voltage: '3.3V Logic',
         pins: [
-          { name: 'Cathode', target: 'Ground Rail', pinKey: 'GND', color: 'black' },
-          { name: 'Red Anode', target: '220Ω ➔ GPIO15', pinKey: 'led', color: 'orange' },
-          { name: 'Green Anode', target: '220Ω ➔ GPIO16', pinKey: 'led', color: 'green' },
-          { name: 'Blue Anode', target: '220Ω ➔ GPIO17', pinKey: 'led', color: 'blue' }
+          { name: 'Cathode', role: 'Common Ground Return Pin', target: 'Top - GND Rail', pinKey: 'GND', color: 'Black', proto: 'GND' },
+          { name: 'Red Anode', role: 'Red LED Die (Fire Emergency)', target: '220Ω ➔ GPIO15', pinKey: 'led', color: 'Orange', proto: 'GPIO' },
+          { name: 'Green Anode', role: 'Green LED Die (Doorbell / OK)', target: '220Ω ➔ GPIO16', pinKey: 'led', color: 'Green', proto: 'GPIO' },
+          { name: 'Blue Anode', role: 'Blue LED Die (Listening Status)', target: '220Ω ➔ GPIO17', pinKey: 'led', color: 'Blue', proto: 'GPIO' }
         ]
       },
       buzzer: {
-        name: 'ACTIVE 5V BUZZER',
+        name: 'ACTIVE 5V PIEZO SOUNDER',
+        sub: 'Developer Auditory Debugging Cue',
+        protocol: 'Direct GPIO Drive',
+        voltage: '5.0V VBUS',
         pins: [
-          { name: 'Buzzer (+)', target: 'ESP32 GPIO14', pinKey: 'GPIO14', color: 'blue' },
-          { name: 'Buzzer (-)', target: 'Ground Rail', pinKey: 'GND', color: 'black' }
+          { name: 'Buzzer (+)', role: 'Positive Signal Drive Pin', target: 'ESP32 GPIO14', pinKey: 'GPIO14', color: 'Blue', proto: 'GPIO' },
+          { name: 'Buzzer (-)', role: 'Ground Return Path', target: 'Bottom - GND Rail', pinKey: 'GND', color: 'Black', proto: 'GND' }
         ]
       },
       transCircuit: {
-        name: '2N2222 BJT & PASSIVES',
+        name: '2N2222 DRIVER & DECOUPLING',
+        sub: 'Low-Side Switch + 100µF/0.1µF Filters',
+        protocol: 'Discrete Power Conditioning',
+        voltage: '5.0V / 3.3V',
         pins: [
-          { name: 'Base', target: '1kΩ ➔ ESP32 GPIO18', pinKey: 'GPIO18', color: 'yellow' },
-          { name: 'Collector', target: 'Motor (-) & Diode', pinKey: 'GPIO18', color: 'yellow' },
-          { name: 'Emitter', target: 'Ground Rail', pinKey: 'GND', color: 'black' },
-          { name: 'Cap 100uF', target: '3.3V to GND Filter', pinKey: '3V3', color: 'red' }
+          { name: 'Base', role: '1kΩ Resistor Input', target: 'ESP32 GPIO18', pinKey: 'GPIO18', color: 'Yellow', proto: 'PWM' },
+          { name: 'Collector', role: 'Switched Motor & Flyback Clamp', target: 'Motor (-) & 1N4148', pinKey: 'GPIO18', color: 'Yellow', proto: 'Driver' },
+          { name: 'Emitter', role: 'Saturated Ground Sink', target: 'Bottom - GND Rail', pinKey: 'GND', color: 'Black', proto: 'GND' },
+          { name: 'Cap 100uF', role: 'Electrolytic Low-Freq Ripple Filter', target: '3.3V to GND Rail', pinKey: '3V3', color: 'Red', proto: 'Filter' }
         ]
       }
     };
@@ -141,18 +169,41 @@ export class OverlayUI {
       this.selectedCompNameEl.textContent = data.name;
     }
 
-    this.sidebarPinTable.innerHTML = '';
+    this.sidebarPinTable.innerHTML = `
+      <div class="inspector-badge-row">
+        <span class="insp-proto-badge">${data.protocol}</span>
+        <span class="insp-volt-badge">${data.voltage}</span>
+      </div>
+    `;
+
     data.pins.forEach(pin => {
       const row = document.createElement('div');
       row.className = 'pin-row';
       row.innerHTML = `
-        <span class="pin-tag">${pin.name}</span>
-        <span class="pin-arrow">➔</span>
-        <span class="pin-target">${pin.target}</span>
-        <button class="btn-pin-focus" data-pin="${pin.pinKey}">Focus</button>
+        <div class="pin-row-main">
+          <div class="pin-title-line">
+            <span class="pin-tag">${pin.name}</span>
+            <span class="pin-proto">${pin.proto}</span>
+          </div>
+          <span class="pin-target">${pin.target}</span>
+          <span class="pin-role-sub">${pin.role}</span>
+        </div>
+        <button class="btn-pin-focus" data-pin="${pin.pinKey}" title="Isolate single connection in 3D">Focus</button>
       `;
 
-      // Clicking the focus button triggers focus connection mode
+      // Hover on pin sends moving electrical pulse
+      row.addEventListener('mouseenter', () => {
+        if (this.callbacks.onHoverPin) {
+          this.callbacks.onHoverPin(pin.pinKey);
+        }
+      });
+      row.addEventListener('mouseleave', () => {
+        if (this.callbacks.onUnhoverPin) {
+          this.callbacks.onUnhoverPin();
+        }
+      });
+
+      // Focus button or click isolates connection
       row.querySelector('.btn-pin-focus')?.addEventListener('click', (e) => {
         e.stopPropagation();
         if (this.callbacks.onFocusPin) {
@@ -160,7 +211,6 @@ export class OverlayUI {
         }
       });
 
-      // Clicking row also triggers focus
       row.addEventListener('click', () => {
         if (this.callbacks.onFocusPin) {
           this.callbacks.onFocusPin(pin.pinKey);
@@ -172,14 +222,38 @@ export class OverlayUI {
   }
 
   initEvents() {
-    // Clean View toggle
-    document.getElementById('btn-clean-view')?.addEventListener('click', () => {
-      document.body.classList.toggle('clean-mode');
+    // 4 View Modes Switcher
+    document.querySelectorAll('.mode-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.mode-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const mode = tab.getAttribute('data-mode');
+        if (this.callbacks.onModeChange) {
+          this.callbacks.onModeChange(mode);
+        }
+      });
+    });
+
+    // X-Ray Mode toggle
+    this.xrayBtn?.addEventListener('click', () => {
+      const isXRay = this.callbacks.onToggleXRay();
+      this.xrayBtn.classList.toggle('active', isXRay);
+      if (this.xrayLabel) {
+        this.xrayLabel.textContent = isXRay ? '🔍 X-Ray: ON' : '🔍 X-Ray';
+      }
+    });
+
+    // Exploded View toggle
+    this.explodeBtn?.addEventListener('click', () => {
+      const isExp = this.callbacks.onToggleExplode();
+      this.explodeBtn.classList.toggle('active', isExp);
+      if (this.explodeLabel) {
+        this.explodeLabel.textContent = isExp ? '💥 Exploded' : '💥 Explode';
+      }
     });
 
     // Mobile View toggle
-    const mobileBtn = document.getElementById('btn-mobile-view');
-    mobileBtn?.addEventListener('click', () => {
+    document.getElementById('btn-mobile-view')?.addEventListener('click', () => {
       if (this.mobileWindow) {
         this.mobileWindow.classList.toggle('hidden');
       }
@@ -191,16 +265,32 @@ export class OverlayUI {
       }
     });
 
-    // Camera preset buttons
-    document.querySelectorAll('.cam-btn').forEach(btn => {
+    // Close Signal Flow View
+    document.getElementById('btn-close-flow')?.addEventListener('click', () => {
+      this.setSignalFlowOpen(false);
+      // Switch active tab back to 3D View
+      document.querySelectorAll('.mode-tab').forEach(t => {
+        if (t.getAttribute('data-mode') === '3d') t.classList.add('active');
+        else t.classList.remove('active');
+      });
+      if (this.callbacks.onModeChange) {
+        this.callbacks.onModeChange('3d');
+      }
+    });
+
+    // Signal Flow Modal Simulation buttons
+    document.querySelectorAll('.flow-sim-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.cam-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const view = btn.getAttribute('data-view');
-        if (this.callbacks.onCameraChange) {
-          this.callbacks.onCameraChange(view);
+        const alertType = btn.getAttribute('data-alert');
+        if (this.callbacks.onTriggerAlert) {
+          this.callbacks.onTriggerAlert(alertType);
         }
       });
+    });
+
+    // Clean View toggle
+    document.getElementById('btn-clean-view')?.addEventListener('click', () => {
+      document.body.classList.toggle('clean-mode');
     });
 
     // Sidebar Module selection
@@ -262,19 +352,12 @@ export class OverlayUI {
     this.audioBtn?.addEventListener('click', () => {
       const isMuted = this.callbacks.onToggleAudio();
       if (this.audioLabel) {
-        this.audioLabel.textContent = isMuted ? 'Sound: OFF' : 'Sound: ON';
+        this.audioLabel.textContent = isMuted ? '🔇 Sound: OFF' : '🔊 Sound: ON';
       }
       this.audioBtn.style.opacity = isMuted ? '0.6' : '1.0';
     });
 
-    // Split-View Interactive Schematic Toggle
-    document.getElementById('btn-schematic-toggle')?.addEventListener('click', () => {
-      if (this.callbacks.onToggleSchematic) {
-        this.callbacks.onToggleSchematic();
-      }
-    });
-
-    // Pinout / Specs modal
+    // Specs modal
     document.getElementById('btn-pinout-modal')?.addEventListener('click', () => {
       this.modalEl?.classList.remove('hidden');
     });
@@ -290,11 +373,18 @@ export class OverlayUI {
     });
   }
 
+  setSignalFlowOpen(isOpen) {
+    if (this.signalFlowModal) {
+      if (isOpen) this.signalFlowModal.classList.remove('hidden');
+      else this.signalFlowModal.classList.add('hidden');
+    }
+  }
+
   showPinInspector(pathway) {
     if (!pathway || !this.hudBanner) return;
 
     if (this.hudSrcPin) this.hudSrcPin.textContent = pathway.espPin || 'ESP32 Pin';
-    if (this.hudWireDesc) this.hudWireDesc.textContent = pathway.wireName || 'Routed Wire';
+    if (this.hudWireDesc) this.hudWireDesc.textContent = pathway.wireName || 'Manhattan Routed Wire';
     if (this.hudDestPin) this.hudDestPin.textContent = `${pathway.destComp || ''} — ${pathway.destPin || ''}`;
     if (this.hudNetBadge) this.hudNetBadge.textContent = `${(pathway.net || 'SIGNAL').toUpperCase()} BUS`;
     if (this.hudDesc) this.hudDesc.textContent = pathway.purpose || '';
@@ -349,6 +439,7 @@ export class OverlayUI {
 
     // Reset all nodes
     Object.values(this.pipeNodes).forEach(node => node?.classList.remove('active'));
+    document.querySelectorAll('.flow-stage-card').forEach(c => c.classList.remove('active'));
 
     if (alertType === 'reset' || alertType === 'listening') {
       if (this.pipelineTimer) this.pipelineTimer.textContent = 'IDLE (Streaming @ 16 kHz)';
@@ -367,6 +458,7 @@ export class OverlayUI {
     stages.forEach((stage, idx) => {
       setTimeout(() => {
         this.pipeNodes[stage.key]?.classList.add('active');
+        document.querySelector(`.flow-stage-card[data-stage="${stage.key}"]`)?.classList.add('active');
         if (this.pipelineTimer) {
           this.pipelineTimer.textContent = `${stage.label} (${stage.time})`;
         }
@@ -376,6 +468,7 @@ export class OverlayUI {
     // Clear after sequence
     setTimeout(() => {
       Object.values(this.pipeNodes).forEach(node => node?.classList.remove('active'));
+      document.querySelectorAll('.flow-stage-card').forEach(c => c.classList.remove('active'));
       if (this.pipelineTimer) {
         this.pipelineTimer.textContent = `ALERT ARMED (TinyML Confirmed)`;
       }
@@ -473,7 +566,5 @@ export class OverlayUI {
     }
   }
 
-  updateTelemetry() {
-    // Telemetry hook
-  }
+  updateTelemetry() {}
 }

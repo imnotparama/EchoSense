@@ -29,19 +29,23 @@
         </div>
       </div>
 
-      <div class="header-right">
-        <!-- Viewport Camera Presets -->
-        <div class="cam-preset-group">
-          <button class="cam-btn active" data-view="reset" title="Hero Isometric View">Isometric</button>
-          <button class="cam-btn" data-view="top" title="Top-Down Pin Alignment">Top</button>
-          <button class="cam-btn" data-view="front" title="Front Elevation">Front</button>
+      <div class="header-center">
+        <!-- 4 Primary Engineering Viewing Modes -->
+        <div class="view-mode-switcher">
+          <button class="mode-tab active" data-mode="3d" title="Interactive 3D CAD Perspective View">🌐 3D View</button>
+          <button class="mode-tab" data-mode="top" title="True Orthographic Flat View (Wokwi Style)">📐 Top View</button>
+          <button class="mode-tab" data-mode="schematic" title="Synchronized 2D Circuit Schematic">📋 Schematic</button>
+          <button class="mode-tab" data-mode="flow" title="Interactive Signal Flow Architecture Pipeline">⚡ Signal Flow</button>
         </div>
+      </div>
 
-        <button class="icon-button" id="btn-audio-toggle" title="Toggle Simulation Audio">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path id="audio-icon-path" d="M11 5L6 9H2v6h4l5 4V5z M19.07 4.93a10 10 0 0 1 0 14.14 M15.54 8.46a5 5 0 0 1 0 7.07"/>
-          </svg>
-          <span id="audio-btn-label">Sound: ON</span>
+      <div class="header-right">
+        <button class="icon-button" id="btn-xray-toggle" title="Toggle X-Ray Transparency (Hide Component Bodies)">
+          <span id="xray-label">🔍 X-Ray</span>
+        </button>
+
+        <button class="icon-button" id="btn-explode-toggle" title="Toggle Exploded Assembly View (Lift Components)">
+          <span id="explode-label">💥 Explode</span>
         </button>
 
         <button class="icon-button primary-accent" id="btn-mobile-view" title="Open Detachable Mobile Alert View">
@@ -49,9 +53,11 @@
           <span class="badge-dot"></span>
         </button>
 
-        <button class="icon-button" id="btn-schematic-toggle" title="Toggle Split-View Circuit Schematic">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-          <span>Schematic</span>
+        <button class="icon-button" id="btn-audio-toggle" title="Toggle Simulation Audio">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path id="audio-icon-path" d="M11 5L6 9H2v6h4l5 4V5z M19.07 4.93a10 10 0 0 1 0 14.14 M15.54 8.46a5 5 0 0 1 0 7.07"/>
+          </svg>
+          <span id="audio-btn-label">Sound: ON</span>
         </button>
 
         <button class="icon-button" id="btn-pinout-modal" title="View Hardware Architecture Specs">
@@ -386,6 +392,98 @@
               </ul>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Full-Screen Interactive Signal Flow Architecture View -->
+    <div id="signal-flow-view" class="signal-flow-overlay glass-panel hidden">
+      <div class="flow-overlay-header">
+        <div class="flow-header-left">
+          <div class="flow-header-badge">
+            <span class="status-indicator live-pulse"></span>
+            <span class="flow-tag">SYSTEM ARCHITECTURE PIPELINE</span>
+          </div>
+          <h2 class="flow-main-title">End-to-End Signal Propagation Diagram</h2>
+          <p class="flow-sub">From ambient acoustic pressure wave to on-device TinyML inference and dual-channel tactile actuation</p>
+        </div>
+        <button class="flow-close-btn" id="btn-close-flow">&times;</button>
+      </div>
+
+      <div class="flow-diagram-container">
+        <!-- Node 1: Sound Wave -->
+        <div class="flow-stage-card" data-stage="sound">
+          <div class="stage-num">STAGE 01</div>
+          <div class="stage-icon">🔊</div>
+          <div class="stage-title">Acoustic Sound Wave</div>
+          <div class="stage-desc">Environmental sound wave (e.g. 3.1 kHz tonal alarm or ambient audio) propagates through air.</div>
+          <div class="stage-metric">Latency: 0 ms • 40–96 dB SPL</div>
+        </div>
+
+        <div class="flow-arrow-large">➔</div>
+
+        <!-- Node 2: Microphone -->
+        <div class="flow-stage-card" data-stage="mic">
+          <div class="stage-num">STAGE 02</div>
+          <div class="stage-icon">🎙️</div>
+          <div class="stage-title">INMP441 MEMS Transducer</div>
+          <div class="stage-desc">Bottom acoustic port converts air pressure to 24-bit delta-sigma digital PCM stream via I2S.</div>
+          <div class="stage-metric">Latency: +5 ms • 16.0 kHz DMA</div>
+        </div>
+
+        <div class="flow-arrow-large">➔</div>
+
+        <!-- Node 3: ESP32-S3 DMA -->
+        <div class="flow-stage-card" data-stage="mcu">
+          <div class="stage-num">STAGE 03</div>
+          <div class="stage-icon">⚡</div>
+          <div class="stage-title">ESP32-S3 DMA Buffer</div>
+          <div class="stage-desc">Direct Memory Access streams audio bits into dual-buffer ring without CPU intervention.</div>
+          <div class="stage-metric">Latency: +12 ms • 240 MHz Dual-Core</div>
+        </div>
+
+        <div class="flow-arrow-large">➔</div>
+
+        <!-- Node 4: TinyML CNN -->
+        <div class="flow-stage-card" data-stage="ai">
+          <div class="stage-num">STAGE 04</div>
+          <div class="stage-icon">🧠</div>
+          <div class="stage-title">TinyML 1D-CNN Model</div>
+          <div class="stage-desc">ESP-NN DSP vector instructions compute MFCC spectrogram & classify sound category in 28ms.</div>
+          <div class="stage-metric">Latency: +28 ms • 98.4% Confidence</div>
+        </div>
+
+        <div class="flow-arrow-large">➔</div>
+
+        <!-- Node 5: Actuators -->
+        <div class="flow-stage-card" data-stage="actuators">
+          <div class="stage-num">STAGE 05</div>
+          <div class="stage-icon">📳</div>
+          <div class="stage-title">2N2222 Driver & Actuators</div>
+          <div class="stage-desc">GPIO18 saturates 2N2222 BJT to switch 5V ERM vibration motor + SSD1306 HUD alert + RGB LED.</div>
+          <div class="stage-metric">Latency: +32 ms • 100% Tactile</div>
+        </div>
+
+        <div class="flow-arrow-large">➔</div>
+
+        <!-- Node 6: Mobile BLE -->
+        <div class="flow-stage-card" data-stage="mobile">
+          <div class="stage-num">STAGE 06</div>
+          <div class="stage-icon">📱</div>
+          <div class="stage-title">BLE 5.0 Mobile Push</div>
+          <div class="stage-desc">GATT notification broadcast to assistive smartphone companion with emergency haptic waveform.</div>
+          <div class="stage-metric">Latency: +36 ms • BLE 5.0 Synced</div>
+        </div>
+      </div>
+
+      <div class="flow-sim-footer">
+        <span class="footer-hint">SIMULATE SOUND EVENT PROPAGATION:</span>
+        <div class="flow-sim-triggers">
+          <button class="flow-sim-btn fire" data-alert="fire">🔥 Fire Alarm (3.1 kHz)</button>
+          <button class="flow-sim-btn doorbell" data-alert="doorbell">🔔 Doorbell (Chime)</button>
+          <button class="flow-sim-btn baby" data-alert="baby">👶 Baby Cry (Harmonic)</button>
+          <button class="flow-sim-btn horn" data-alert="horn">🚗 Vehicle Horn (Dual-Tone)</button>
+          <button class="flow-sim-btn listening" data-alert="reset">🎧 Ambient Listening</button>
         </div>
       </div>
     </div>

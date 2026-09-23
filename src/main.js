@@ -329,6 +329,10 @@ class EchoSenseApp {
       if (pathway.destComp) {
         this.isolateComponentCircuit(pathway.destComp);
       }
+      // Two-way synchronization with 2D Schematic
+      if (this.schematicView) {
+        this.schematicView.highlightNode(pathway.net || pathway.wire?.id);
+      }
     }
   }
 
@@ -345,6 +349,10 @@ class EchoSenseApp {
       }
       if (pathway.destComp) {
         this.isolateComponentCircuit(pathway.destComp);
+      }
+      // Two-way synchronization with 2D Schematic
+      if (this.schematicView) {
+        this.schematicView.highlightNode(pathway.net || pinKey);
       }
     } else {
       this.resetPinInspection();
@@ -501,6 +509,19 @@ class EchoSenseApp {
 
   initUI() {
     this.ui = new OverlayUI({
+      onModeChange: (mode) => this.switchViewMode(mode),
+      onToggleXRay: () => this.sceneMgr.toggleXRay(),
+      onToggleExplode: () => this.explosionMgr.toggle(),
+      onHoverPin: (pinKey) => {
+        if (!this.activeInspectedWireId) {
+          this.wireManager.isolatePin(pinKey);
+        }
+      },
+      onUnhoverPin: () => {
+        if (!this.activeInspectedWireId) {
+          this.wireManager.clearConnectionHighlight();
+        }
+      },
       onCameraChange: (viewKey) => this.sceneMgr.setCameraView(viewKey),
       onNetFilter: (netKey) => {
         this.resetComponentDimming();
@@ -520,8 +541,80 @@ class EchoSenseApp {
       this.resetPinInspection();
     });
 
+    // Setup global keyboard hotkeys (1-4, X, E, M, Esc)
+    this.initKeyboardHotkeys();
+
     // Initialize in listening mode
     this.triggerAlert('listening');
+  }
+
+  switchViewMode(mode) {
+    this.currentViewMode = mode;
+
+    if (mode === '3d') {
+      this.schematicView.toggle(false);
+      this.ui.setSignalFlowOpen(false);
+      this.sceneMgr.setCameraView('iso');
+    } else if (mode === 'top') {
+      this.schematicView.toggle(false);
+      this.ui.setSignalFlowOpen(false);
+      this.sceneMgr.setCameraView('top');
+    } else if (mode === 'schematic') {
+      this.ui.setSignalFlowOpen(false);
+      this.schematicView.toggle(true);
+    } else if (mode === 'flow') {
+      this.schematicView.toggle(false);
+      this.ui.setSignalFlowOpen(true);
+    }
+  }
+
+  initKeyboardHotkeys() {
+    window.addEventListener('keydown', (e) => {
+      if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+      const key = e.key.toLowerCase();
+      if (key === '1') {
+        this.switchViewMode('3d');
+        this.updateModeTabUI('3d');
+      } else if (key === '2') {
+        this.switchViewMode('top');
+        this.updateModeTabUI('top');
+      } else if (key === '3') {
+        this.switchViewMode('schematic');
+        this.updateModeTabUI('schematic');
+      } else if (key === '4') {
+        this.switchViewMode('flow');
+        this.updateModeTabUI('flow');
+      } else if (key === 'x') {
+        const isXRay = this.sceneMgr.toggleXRay();
+        const xrayBtn = document.getElementById('btn-xray-toggle');
+        const xrayLabel = document.getElementById('xray-label');
+        xrayBtn?.classList.toggle('active', isXRay);
+        if (xrayLabel) xrayLabel.textContent = isXRay ? '🔍 X-Ray: ON' : '🔍 X-Ray';
+      } else if (key === 'e') {
+        const isExp = this.explosionMgr.toggle();
+        const expBtn = document.getElementById('btn-explode-toggle');
+        const expLabel = document.getElementById('explode-label');
+        expBtn?.classList.toggle('active', isExp);
+        if (expLabel) expLabel.textContent = isExp ? '💥 Exploded' : '💥 Explode';
+      } else if (key === 'm') {
+        const win = document.getElementById('mobile-companion-window');
+        win?.classList.toggle('hidden');
+      } else if (key === 'escape') {
+        this.resetPinInspection();
+        this.schematicView.toggle(false);
+        this.ui.setSignalFlowOpen(false);
+        this.updateModeTabUI('3d');
+        this.switchViewMode('3d');
+      }
+    });
+  }
+
+  updateModeTabUI(mode) {
+    document.querySelectorAll('.mode-tab').forEach(t => {
+      if (t.getAttribute('data-mode') === mode) t.classList.add('active');
+      else t.classList.remove('active');
+    });
   }
 
   triggerAlert(type) {

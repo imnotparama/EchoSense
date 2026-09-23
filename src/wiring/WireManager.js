@@ -435,6 +435,89 @@ export class WireManager {
     wireDefinitions.forEach(def => this.createJumperWire(def));
   }
 
+  /**
+   * Compute orthogonal Manhattan / PCB-style stepped route with filleted 90-degree corners.
+   */
+  computeManhattanCurve(pStart, pEnd, def) {
+    // Discrete layer elevation based on net type to prevent collision
+    const layerMap = {
+      power: 1.15,
+      ground: 1.15,
+      i2s: 1.30,
+      i2c: 1.45,
+      motor: 1.60,
+      led: 1.70,
+      buzzer: 1.72
+    };
+    const baseElevation = layerMap[def.net] || 1.35;
+    const routeY = Math.max(pStart.y, pEnd.y) + (baseElevation - this.breadboard.height);
+
+    // Channel lane determination
+    let corner1, corner2;
+
+    const isStartRail = Math.abs(pStart.z) > 1.8;
+    const isEndRail = Math.abs(pEnd.z) > 1.8;
+
+    if (isStartRail || isEndRail) {
+      // Connect to or from rail: step directly to rail channel
+      const railZ = isEndRail ? pEnd.z : pStart.z;
+      const turnZ = railZ > 0 ? (railZ - 0.28) : (railZ + 0.28);
+      corner1 = new THREE.Vector3(pStart.x, routeY, turnZ);
+      corner2 = new THREE.Vector3(pEnd.x, routeY, turnZ);
+    } else {
+      // Logic signal: step through channel between components
+      if (Math.abs(pStart.x - pEnd.x) < 0.6) {
+        const midZ = (pStart.z + pEnd.z) / 2;
+        corner1 = new THREE.Vector3(pStart.x, routeY, midZ);
+        corner2 = new THREE.Vector3(pEnd.x, routeY, midZ);
+      } else {
+        // Step to dedicated routing channel
+        let channelZ;
+        if (pStart.z < -0.4 && pEnd.z < -0.4) {
+          channelZ = -1.7; // Top trench
+        } else if (pStart.z > 0.4 && pEnd.z > 0.4) {
+          channelZ = 1.7; // Bottom trench
+        } else {
+          channelZ = (pStart.z + pEnd.z) / 2; // Mid trough
+        }
+        corner1 = new THREE.Vector3(pStart.x, routeY, channelZ);
+        corner2 = new THREE.Vector3(pEnd.x, routeY, channelZ);
+      }
+    }
+
+    // Waypoints with vertical riser legs
+    const vStartTop = new THREE.Vector3(pStart.x, routeY, pStart.z);
+    const vEndTop = new THREE.Vector3(pEnd.x, routeY, pEnd.z);
+
+    const rawPoints = [pStart.clone(), vStartTop, corner1, corner2, vEndTop, pEnd.clone()];
+
+    // Generate filleted points for rounded 90-degree corners
+    const filletedPoints = [];
+    filletedPoints.push(rawPoints[0]);
+
+    const filletDist = 0.16; // Radius of corner bend
+    for (let i = 1; i < rawPoints.length - 1; i++) {
+      const prev = rawPoints[i - 1];
+      const curr = rawPoints[i];
+      const next = rawPoints[i + 1];
+
+      const dirIn = new THREE.Vector3().subVectors(prev, curr).normalize();
+      const dirOut = new THREE.Vector3().subVectors(next, curr).normalize();
+
+      const dIn = Math.min(filletDist, curr.distanceTo(prev) * 0.4);
+      const dOut = Math.min(filletDist, curr.distanceTo(next) * 0.4);
+
+      const pBefore = new THREE.Vector3().copy(curr).addScaledVector(dirIn, dIn);
+      const pAfter = new THREE.Vector3().copy(curr).addScaledVector(dirOut, dOut);
+
+      filletedPoints.push(pBefore);
+      filletedPoints.push(pAfter);
+    }
+    filletedPoints.push(rawPoints[rawPoints.length - 1]);
+
+    return new THREE.CatmullRomCurve3(filletedPoints, false, 'catmullrom', 0.05);
+  }
+
   createJumperWire(def) {
     const pStart = this.breadboard.getHolePos(def.from);
     const pEnd = this.breadboard.getHolePos(def.to);
@@ -455,11 +538,6 @@ export class WireManager {
       toComp: def.toComp
     };
 
-    const midX = (pStart.x + pEnd.x) / 2;
-    const midZ = (pStart.z + pEnd.z) / 2;
-    const dist = pStart.distanceTo(pEnd);
-    const archHeight = Math.max(0.6, dist * 0.28 + (def.sag || 0.3));
-
     const bootMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 });
     const pinMat = new THREE.MeshStandardMaterial({ color: 0xe4e4e7, metalness: 0.95, roughness: 0.15 });
 
@@ -471,21 +549,18 @@ export class WireManager {
     const bootEnd = new THREE.Mesh(bootGeo, bootMat);
     bootEnd.position.set(pEnd.x, pEnd.y + 0.19, pEnd.z);
 
-    // Shiny nickel-plated pin pin entering hole
+    // Shiny nickel-plated pin entering hole
     const pinGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.24, 10);
     const pinStart = new THREE.Mesh(pinGeo, pinMat);
     pinStart.position.set(pStart.x, pStart.y, pStart.z);
     const pinEnd = new THREE.Mesh(pinGeo, pinMat);
     pinEnd.position.set(pEnd.x, pEnd.y, pEnd.z);
 
-    const p1 = new THREE.Vector3(pStart.x, pStart.y + 0.38, pStart.z);
-    const p2 = new THREE.Vector3(midX, this.breadboard.height + archHeight, midZ);
-    const p3 = new THREE.Vector3(pEnd.x, pEnd.y + 0.38, pEnd.z);
-
-    const curve = new THREE.CatmullRomCurve3([pStart.clone(), p1, p2, p3, pEnd.clone()]);
+    // Compute Manhattan orthogonal stepped curve
+    const curve = this.computeManhattanCurve(pStart, pEnd, def);
     const sampledPoints = curve.getPoints(50);
-    // Smooth rounded cable geometry (Wokwi-style thick jumper wire)
-    const tubeGeo = new THREE.TubeGeometry(curve, 40, 0.08, 12, false);
+    // Crisp wire geometry
+    const tubeGeo = new THREE.TubeGeometry(curve, 44, 0.075, 12, false);
 
     const wireMat = new THREE.MeshStandardMaterial({
       color: def.color,
@@ -520,59 +595,44 @@ export class WireManager {
     this.wireRecords.push({
       id: def.id,
       net: def.net,
-      name: def.name,
-      fromPin: def.fromPin,
-      fromHole: def.fromHole,
-      toPin: def.toPin,
-      toHole: def.toHole,
-      role: def.role,
-      colorName: def.colorName,
-      fromComp: def.fromComp,
-      toComp: def.toComp,
-      sag: def.sag || 0.3,
-      curve: curve,
-      sampledPoints: sampledPoints,
       group: wireGroup,
-      wireMesh: wireMesh,
+      wireMesh,
       material: wireMat,
       baseColor: new THREE.Color(def.color),
       pStart: pStart.clone(),
       pEnd: pEnd.clone(),
-      basePStart: pStart.clone(),
-      basePEnd: pEnd.clone(),
+      origPStart: pStart.clone(),
+      origPEnd: pEnd.clone(),
+      fromComp: def.fromComp,
+      toComp: def.toComp,
+      curve,
+      sampledPoints,
       bootStart,
       bootEnd,
       pinStart,
-      pinEnd
+      pinEnd,
+      def
     });
   }
 
   updateExplosion(factor, liftMap) {
     this.wireRecords.forEach(w => {
-      const liftStart = (liftMap[w.fromComp] || 0) * factor;
-      const liftEnd = (liftMap[w.toComp] || 0) * factor;
+      const liftStart = liftMap[w.fromComp] || 0;
+      const liftEnd = liftMap[w.toComp] || 0;
 
-      const pStart = w.basePStart.clone();
-      pStart.y += liftStart;
-      const pEnd = w.basePEnd.clone();
-      pEnd.y += liftEnd;
+      const pStart = w.origPStart.clone();
+      pStart.y += liftStart * factor;
+
+      const pEnd = w.origPEnd.clone();
+      pEnd.y += liftEnd * factor;
 
       w.pStart.copy(pStart);
       w.pEnd.copy(pEnd);
 
-      const midX = (pStart.x + pEnd.x) / 2;
-      const midZ = (pStart.z + pEnd.z) / 2;
-      const dist = pStart.distanceTo(pEnd);
-      const archHeight = Math.max(0.6, dist * 0.28 + (w.sag || 0.3));
-
-      const p1 = new THREE.Vector3(pStart.x, pStart.y + 0.38, pStart.z);
-      const p2 = new THREE.Vector3(midX, Math.max(pStart.y, pEnd.y) + archHeight, midZ);
-      const p3 = new THREE.Vector3(pEnd.x, pEnd.y + 0.38, pEnd.z);
-
-      w.curve = new THREE.CatmullRomCurve3([pStart, p1, p2, p3, pEnd]);
+      w.curve = this.computeManhattanCurve(pStart, pEnd, w.def);
       w.sampledPoints = w.curve.getPoints(50);
       w.wireMesh.geometry.dispose();
-      w.wireMesh.geometry = new THREE.TubeGeometry(w.curve, 36, 0.075, 12, false);
+      w.wireMesh.geometry = new THREE.TubeGeometry(w.curve, 44, 0.075, 12, false);
 
       w.bootStart.position.set(pStart.x, pStart.y + 0.19, pStart.z);
       w.bootEnd.position.set(pEnd.x, pEnd.y + 0.19, pEnd.z);
@@ -821,6 +881,19 @@ export class WireManager {
       net: record.net,
       wire: record
     };
+  }
+
+  getSignalPath(key) {
+    const signalMap = {
+      'i2s': 'ESP32 (GPIO4/5/6) ➔ INMP441 MEMS (WS, SCK, SD) [16kHz 24-bit I²S DMA]',
+      'gpio18': 'ESP32 (GPIO18) ➔ 1kΩ Resistor ➔ 2N2222 Base ➔ 5V Coin Motor (+1N4148 Clamp)',
+      'motor': 'ESP32 (GPIO18) ➔ 1kΩ Resistor ➔ 2N2222 Base ➔ 5V Coin Motor (+1N4148 Clamp)',
+      'i2c': 'ESP32 (GPIO21/22) ➔ SSD1306 OLED (SDA, SCL) [400kHz I²C Fast Mode]',
+      'buzzer': 'ESP32 (GPIO14) ➔ 5V Active Piezo Buzzer ➔ Ground Bus',
+      'power': 'USB 5V VBUS + 3.3V Regulated Rails with 100µF Low-ESR Decoupling Capacitors',
+      'led': 'ESP32 (GPIO15/16/17) ➔ 220Ω Current-Limiting Resistors ➔ Common Cathode RGB LED'
+    };
+    return signalMap[key] || `Signal Bus [${key}] active across breadboard`;
   }
 
   clearConnectionHighlight() {
