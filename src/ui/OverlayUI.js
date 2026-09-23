@@ -234,6 +234,17 @@ export class OverlayUI {
       });
     });
 
+    // Labels Toggle
+    const labelsBtn = document.getElementById('btn-labels-toggle');
+    const labelsLabel = document.getElementById('labels-label');
+    labelsBtn?.addEventListener('click', () => {
+      const isVisible = this.callbacks.onToggleLabels ? this.callbacks.onToggleLabels() : false;
+      labelsBtn.classList.toggle('active', isVisible);
+      if (labelsLabel) {
+        labelsLabel.textContent = isVisible ? '🏷️ Labels: ON' : '🏷️ Labels';
+      }
+    });
+
     // X-Ray Mode toggle
     this.xrayBtn?.addEventListener('click', () => {
       const isXRay = this.callbacks.onToggleXRay();
@@ -323,9 +334,9 @@ export class OverlayUI {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.plate-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        const opacity = parseFloat(btn.getAttribute('data-opacity'));
-        if (this.callbacks.onOpacityChange) {
-          this.callbacks.onOpacityChange(opacity);
+        const style = btn.getAttribute('data-style');
+        if (this.callbacks.onBaseStyleChange) {
+          this.callbacks.onBaseStyleChange(style);
         }
       });
     });

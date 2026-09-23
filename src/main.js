@@ -510,6 +510,10 @@ class EchoSenseApp {
   initUI() {
     this.ui = new OverlayUI({
       onModeChange: (mode) => this.switchViewMode(mode),
+      onToggleLabels: () => {
+        this.floatingLabels.group.visible = !this.floatingLabels.group.visible;
+        return this.floatingLabels.group.visible;
+      },
       onToggleXRay: () => this.sceneMgr.toggleXRay(),
       onToggleExplode: () => this.explosionMgr.toggle(),
       onHoverPin: (pinKey) => {
@@ -532,6 +536,17 @@ class EchoSenseApp {
       onTriggerAlert: (alertType) => this.triggerAlert(alertType),
       onToggleAudio: () => this.soundSynth.toggleMute(),
       onOpacityChange: (alpha) => this.breadboard.setOpacity(alpha),
+      onBaseStyleChange: (style) => {
+        if (style === 'classic') {
+          this.breadboard.setTheme('classic');
+          this.breadboard.setOpacity(1.0);
+        } else if (style === 'dark') {
+          this.breadboard.setTheme('dark');
+          this.breadboard.setOpacity(1.0);
+        } else if (style === 'acrylic') {
+          this.breadboard.setOpacity(0.35);
+        }
+      },
       onToggleSchematic: () => this.schematicView.toggle(),
       onResetInspection: () => this.resetPinInspection()
     });
@@ -600,6 +615,12 @@ class EchoSenseApp {
       } else if (key === 'm') {
         const win = document.getElementById('mobile-companion-window');
         win?.classList.toggle('hidden');
+      } else if (key === 'l') {
+        this.floatingLabels.group.visible = !this.floatingLabels.group.visible;
+        const labelsBtn = document.getElementById('btn-labels-toggle');
+        const labelsLabel = document.getElementById('labels-label');
+        labelsBtn?.classList.toggle('active', this.floatingLabels.group.visible);
+        if (labelsLabel) labelsLabel.textContent = this.floatingLabels.group.visible ? '🏷️ Labels: ON' : '🏷️ Labels';
       } else if (key === 'escape') {
         this.resetPinInspection();
         this.schematicView.toggle(false);

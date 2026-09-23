@@ -74,27 +74,27 @@ export class WireManager {
       blue: 0x3b82f6,
       yellow: 0xeab308,
       teal: 0x14b8a6,
-      purple: 0xa855f7
+      purple: 0xa855f7,
+      orange: 0xf97316
     };
 
     const wireDefinitions = [
-      // POWER NETS
+      // 1. POWER & GROUND DISTRIBUTION
       {
         id: 'pwr_3v3',
         net: 'power',
         color: COLORS.red,
         colorName: 'Red',
         fromPin: 'ESP32 3V3',
-        fromHole: 'Row 21, Col E',
-        toPin: 'Top + Power Rail',
+        fromHole: 'Row 21, Col D',
+        toPin: 'Top + 3.3V Rail',
         toHole: '+ Rail, Pin 21',
-        from: { row: 21, col: 'E' },
+        from: { row: 21, col: 'D' },
         to: { rail: '+top', pin: 21 },
         fromComp: 'esp32',
         toComp: 'breadboard',
-        sag: 0.45,
-        name: 'ESP32 3.3V Out -> Top + Rail',
-        role: 'Supplies regulated 3.3V power to the top rail for the INMP441 mic and OLED display'
+        name: 'ESP32 3.3V Out ➔ Top + Rail',
+        role: 'Regulated 3.3V power bus powering the INMP441 mic and OLED display'
       },
       {
         id: 'gnd_top',
@@ -102,16 +102,15 @@ export class WireManager {
         color: COLORS.black,
         colorName: 'Black',
         fromPin: 'ESP32 GND',
-        fromHole: 'Row 22, Col E',
+        fromHole: 'Row 22, Col D',
         toPin: 'Top - GND Rail',
         toHole: '- Rail, Pin 22',
-        from: { row: 22, col: 'E' },
+        from: { row: 22, col: 'D' },
         to: { rail: '-top', pin: 22 },
         fromComp: 'esp32',
         toComp: 'breadboard',
-        sag: 0.35,
-        name: 'ESP32 GND -> Top - Rail',
-        role: 'Common ground return path for 3.3V logic components'
+        name: 'ESP32 GND ➔ Top - Rail',
+        role: 'Primary digital ground return path for 3.3V logic'
       },
       {
         id: 'pwr_5v',
@@ -119,16 +118,15 @@ export class WireManager {
         color: COLORS.red,
         colorName: 'Red',
         fromPin: 'ESP32 5V (VBUS)',
-        fromHole: 'Row 42, Col F',
+        fromHole: 'Row 42, Col G',
         toPin: 'Bottom + 5V Rail',
         toHole: '+ Rail, Pin 42',
-        from: { row: 42, col: 'F' },
+        from: { row: 42, col: 'G' },
         to: { rail: '+bot', pin: 42 },
         fromComp: 'esp32',
         toComp: 'breadboard',
-        sag: 0.5,
-        name: 'ESP32 5V (VBUS) -> Bottom + Rail',
-        role: 'Dedicated 5V USB power rail for the coin vibration motor and active buzzer'
+        name: 'ESP32 5V VBUS ➔ Bottom + Rail',
+        role: 'Raw 5V USB power rail for the coin vibration motor and active buzzer'
       },
       {
         id: 'gnd_bot',
@@ -136,19 +134,34 @@ export class WireManager {
         color: COLORS.black,
         colorName: 'Black',
         fromPin: 'ESP32 GND',
-        fromHole: 'Row 22, Col F',
+        fromHole: 'Row 22, Col G',
         toPin: 'Bottom - GND Rail',
         toHole: '- Rail, Pin 22',
-        from: { row: 22, col: 'F' },
+        from: { row: 22, col: 'G' },
         to: { rail: '-bot', pin: 22 },
         fromComp: 'esp32',
         toComp: 'breadboard',
-        sag: 0.4,
-        name: 'ESP32 GND -> Bottom - Rail',
-        role: 'Common ground return path for 5V high-current actuators'
+        name: 'ESP32 GND ➔ Bottom - Rail',
+        role: 'High-current ground return path for actuators'
+      },
+      {
+        id: 'gnd_bridge',
+        net: 'ground',
+        color: COLORS.black,
+        colorName: 'Black',
+        fromPin: 'Top - GND Rail',
+        fromHole: '- Rail, Pin 33',
+        toPin: 'Bottom - GND Rail',
+        toHole: '- Rail, Pin 33',
+        from: { rail: '-top', pin: 33 },
+        to: { rail: '-bot', pin: 33 },
+        fromComp: 'breadboard',
+        toComp: 'breadboard',
+        name: 'Ground Tie Bridge',
+        role: 'Common ground bus reference uniting upper and lower breadboard rails'
       },
 
-      // INMP441 I2S NETS
+      // 2. INMP441 I2S DIGITAL AUDIO
       {
         id: 'inmp_vdd',
         net: 'power',
@@ -162,9 +175,8 @@ export class WireManager {
         to: { rail: '+top', pin: 8 },
         fromComp: 'inmp441',
         toComp: 'breadboard',
-        sag: 0.4,
-        name: 'INMP441 VDD -> 3.3V Rail',
-        role: '3.3V analog and digital power feed for the MEMS microphone transducer'
+        name: 'INMP441 VDD ➔ 3.3V Rail',
+        role: 'Ultra-clean 3.3V analog and digital supply for MEMS transducer'
       },
       {
         id: 'inmp_gnd',
@@ -179,9 +191,8 @@ export class WireManager {
         to: { rail: '-top', pin: 9 },
         fromComp: 'inmp441',
         toComp: 'breadboard',
-        sag: 0.35,
-        name: 'INMP441 GND -> GND Rail',
-        role: 'Ground reference for the microphone ADC'
+        name: 'INMP441 GND ➔ GND Rail',
+        role: 'Ground reference for internal delta-sigma ADC'
       },
       {
         id: 'inmp_lr',
@@ -196,26 +207,8 @@ export class WireManager {
         to: { rail: '-top', pin: 13 },
         fromComp: 'inmp441',
         toComp: 'breadboard',
-        sag: 0.35,
-        name: 'INMP441 L/R -> GND',
-        role: 'Tied to GND to configure the microphone as Left Channel on the I2S bus'
-      },
-      {
-        id: 'inmp_sck',
-        net: 'i2s',
-        color: COLORS.green,
-        colorName: 'Green',
-        fromPin: 'INMP441 SCK',
-        fromHole: 'Row 12, Col C',
-        toPin: 'ESP32 GPIO5',
-        toHole: 'Row 26, Col D',
-        from: { row: 12, col: 'C' },
-        to: { row: 26, col: 'D' },
-        fromComp: 'inmp441',
-        toComp: 'esp32',
-        sag: 0.65,
-        name: 'INMP441 SCK -> ESP32 GPIO5',
-        role: 'I2S Serial Continuous Clock: synchronous clock generated by ESP32 to shift audio bits'
+        name: 'INMP441 L/R ➔ GND Rail',
+        role: 'Tied to GND to configure the microphone as Left Channel on I2S bus'
       },
       {
         id: 'inmp_ws',
@@ -230,9 +223,24 @@ export class WireManager {
         to: { row: 25, col: 'D' },
         fromComp: 'inmp441',
         toComp: 'esp32',
-        sag: 0.6,
-        name: 'INMP441 WS -> ESP32 GPIO4',
-        role: 'I2S Word Select (Left/Right Clock): signals the start of each 24-bit audio frame'
+        name: 'INMP441 WS ➔ ESP32 GPIO4',
+        role: 'I2S Word Select (Left/Right Clock): signals start of 24-bit audio frame'
+      },
+      {
+        id: 'inmp_sck',
+        net: 'i2s',
+        color: COLORS.green,
+        colorName: 'Green',
+        fromPin: 'INMP441 SCK',
+        fromHole: 'Row 12, Col C',
+        toPin: 'ESP32 GPIO5',
+        toHole: 'Row 26, Col D',
+        from: { row: 12, col: 'C' },
+        to: { row: 26, col: 'D' },
+        fromComp: 'inmp441',
+        toComp: 'esp32',
+        name: 'INMP441 SCK ➔ ESP32 GPIO5',
+        role: 'I2S Serial Continuous Clock: bit shift clock generated by ESP32 DMA'
       },
       {
         id: 'inmp_sd',
@@ -247,62 +255,42 @@ export class WireManager {
         to: { row: 27, col: 'D' },
         fromComp: 'inmp441',
         toComp: 'esp32',
-        sag: 0.7,
-        name: 'INMP441 SD -> ESP32 GPIO6',
-        role: 'I2S Serial Data: carries 24-bit studio audio samples into the ESP32 DMA buffer'
+        name: 'INMP441 SD ➔ ESP32 GPIO6',
+        role: 'I2S Serial Data: carries serialized 24-bit PCM acoustic samples'
       },
 
-      // OLED I2C NETS
-      {
-        id: 'oled_vcc',
-        net: 'power',
-        color: COLORS.red,
-        colorName: 'Red',
-        fromPin: 'OLED VCC',
-        fromHole: 'Row 38, Col A',
-        toPin: 'Top + 3.3V Rail',
-        toHole: '+ Rail, Pin 38',
-        from: { row: 38, col: 'A' },
-        to: { rail: '+top', pin: 38 },
-        fromComp: 'oled',
-        toComp: 'breadboard',
-        sag: 0.4,
-        name: 'OLED VCC -> 3.3V Rail',
-        role: 'Powers the SSD1306 OLED display logic and charge pump'
-      },
+      // 3. SSD1306 OLED DISPLAY (I2C)
       {
         id: 'oled_gnd',
         net: 'ground',
         color: COLORS.black,
         colorName: 'Black',
         fromPin: 'OLED GND',
-        fromHole: 'Row 37, Col A',
+        fromHole: 'Row 37, Col B',
         toPin: 'Top - GND Rail',
         toHole: '- Rail, Pin 37',
-        from: { row: 37, col: 'A' },
+        from: { row: 37, col: 'B' },
         to: { rail: '-top', pin: 37 },
         fromComp: 'oled',
         toComp: 'breadboard',
-        sag: 0.35,
-        name: 'OLED GND -> GND Rail',
-        role: 'Ground reference for OLED display'
+        name: 'OLED GND ➔ GND Rail',
+        role: 'Ground return reference for OLED display controller'
       },
       {
-        id: 'oled_sda',
-        net: 'i2c',
-        color: COLORS.teal,
-        colorName: 'Teal',
-        fromPin: 'OLED SDA',
-        fromHole: 'Row 40, Col B',
-        toPin: 'ESP32 GPIO21',
-        toHole: 'Row 38, Col D',
-        from: { row: 40, col: 'B' },
-        to: { row: 38, col: 'D' },
+        id: 'oled_vcc',
+        net: 'power',
+        color: COLORS.red,
+        colorName: 'Red',
+        fromPin: 'OLED VCC',
+        fromHole: 'Row 38, Col B',
+        toPin: 'Top + 3.3V Rail',
+        toHole: '+ Rail, Pin 38',
+        from: { row: 38, col: 'B' },
+        to: { rail: '+top', pin: 38 },
         fromComp: 'oled',
-        toComp: 'esp32',
-        sag: 0.45,
-        name: 'OLED SDA -> ESP32 GPIO21',
-        role: 'I2C Serial Data line: transfers display buffer graphics at 400 kHz'
+        toComp: 'breadboard',
+        name: 'OLED VCC ➔ 3.3V Rail',
+        role: 'Powers SSD1306 logic and charge pump display driver'
       },
       {
         id: 'oled_scl',
@@ -317,12 +305,27 @@ export class WireManager {
         to: { row: 39, col: 'D' },
         fromComp: 'oled',
         toComp: 'esp32',
-        sag: 0.4,
-        name: 'OLED SCL -> ESP32 GPIO22',
-        role: 'I2C Serial Clock line: clock pulses for OLED register and screen updates'
+        name: 'OLED SCL ➔ ESP32 GPIO22',
+        role: 'I2C Serial Clock line: 400 kHz Fast-Mode synchronization clock'
+      },
+      {
+        id: 'oled_sda',
+        net: 'i2c',
+        color: COLORS.teal,
+        colorName: 'Teal',
+        fromPin: 'OLED SDA',
+        fromHole: 'Row 40, Col B',
+        toPin: 'ESP32 GPIO21',
+        toHole: 'Row 38, Col D',
+        from: { row: 40, col: 'B' },
+        to: { row: 38, col: 'D' },
+        fromComp: 'oled',
+        toComp: 'esp32',
+        name: 'OLED SDA ➔ ESP32 GPIO21',
+        role: 'I2C Serial Data line: bidirectional pixel framebuffer data packets'
       },
 
-      // RGB LED
+      // 4. COMMON CATHODE RGB STATUS LED
       {
         id: 'led_cathode',
         net: 'led',
@@ -336,12 +339,75 @@ export class WireManager {
         to: { rail: '-top', pin: 47 },
         fromComp: 'rgbLed',
         toComp: 'breadboard',
-        sag: 0.4,
-        name: 'RGB LED Common Cathode -> GND Rail',
-        role: 'Shared ground sink for Red, Green, and Blue LED dies'
+        name: 'RGB LED Cathode ➔ GND Rail',
+        role: 'Common ground return pin for Red, Green, and Blue LED elements'
+      },
+      {
+        id: 'led_red',
+        net: 'led',
+        color: COLORS.orange,
+        colorName: 'Orange',
+        fromPin: 'ESP32 GPIO15',
+        fromHole: 'Row 30, Col D',
+        toPin: 'Red 220Ω Resistor',
+        toHole: 'Row 46, Col B',
+        from: { row: 30, col: 'D' },
+        to: { row: 46, col: 'B' },
+        fromComp: 'esp32',
+        toComp: 'rgbLed',
+        name: 'ESP32 GPIO15 ➔ Red Anode',
+        role: 'Current-limited GPIO drive triggering Emergency Fire Alarm visual alert'
+      },
+      {
+        id: 'led_green',
+        net: 'led',
+        color: COLORS.green,
+        colorName: 'Green',
+        fromPin: 'ESP32 GPIO16',
+        fromHole: 'Row 31, Col D',
+        toPin: 'Green 220Ω Resistor',
+        toHole: 'Row 49, Col B',
+        from: { row: 31, col: 'D' },
+        to: { row: 49, col: 'B' },
+        fromComp: 'esp32',
+        toComp: 'rgbLed',
+        name: 'ESP32 GPIO16 ➔ Green Anode',
+        role: 'Current-limited GPIO drive triggering Doorbell chime notification'
+      },
+      {
+        id: 'led_blue',
+        net: 'led',
+        color: COLORS.blue,
+        colorName: 'Blue',
+        fromPin: 'ESP32 GPIO17',
+        fromHole: 'Row 32, Col D',
+        toPin: 'Blue 220Ω Resistor',
+        toHole: 'Row 48, Col B',
+        from: { row: 32, col: 'D' },
+        to: { row: 48, col: 'B' },
+        fromComp: 'esp32',
+        toComp: 'rgbLed',
+        name: 'ESP32 GPIO17 ➔ Blue Anode',
+        role: 'Current-limited GPIO drive indicating Ambient DSP Listening state'
       },
 
-      // MOTOR & 2N2222 DRIVER
+      // 5. MOTOR & 2N2222 DRIVER
+      {
+        id: 'motor_base',
+        net: 'motor',
+        color: COLORS.yellow,
+        colorName: 'Yellow',
+        fromPin: 'ESP32 GPIO18',
+        fromHole: 'Row 34, Col G',
+        toPin: '2N2222 Base (1kΩ)',
+        toHole: 'Row 57, Col C',
+        from: { row: 34, col: 'G' },
+        to: { row: 57, col: 'C' },
+        fromComp: 'esp32',
+        toComp: 'transCircuit',
+        name: 'ESP32 GPIO18 ➔ 2N2222 Base',
+        role: 'PWM haptic control signal driving 2N2222 BJT into saturation'
+      },
       {
         id: 'driver_emitter',
         net: 'motor',
@@ -355,9 +421,8 @@ export class WireManager {
         to: { rail: '-bot', pin: 58 },
         fromComp: 'transCircuit',
         toComp: 'breadboard',
-        sag: 0.35,
-        name: '2N2222 Emitter -> GND Rail',
-        role: 'Low-side reference: completes the 5V circuit when transistor is saturated'
+        name: '2N2222 Emitter ➔ GND Rail',
+        role: 'Low-side ground reference completing motor 5V circuit upon saturation'
       },
       {
         id: 'motor_pwr',
@@ -372,9 +437,8 @@ export class WireManager {
         to: { rail: '+bot', pin: 55 },
         fromComp: 'vibeMotor',
         toComp: 'breadboard',
-        sag: 0.45,
-        name: 'Motor + & 1N4148 Cathode -> 5V Rail',
-        role: 'High-torque 5V power supply to vibration motor and diode clamp'
+        name: 'Motor (+) ➔ Bottom + 5V Rail',
+        role: 'Dedicated 5V power feed for 10mm coin vibration motor'
       },
       {
         id: 'motor_ctrl',
@@ -384,17 +448,16 @@ export class WireManager {
         fromPin: 'Motor (-) & 1N4148 Anode',
         fromHole: 'Row 56, Col D',
         toPin: '2N2222 Collector',
-        toHole: 'Row 57, Col E',
+        toHole: 'Row 56, Col E',
         from: { row: 56, col: 'D' },
-        to: { row: 57, col: 'E' },
+        to: { row: 56, col: 'E' },
         fromComp: 'vibeMotor',
         toComp: 'transCircuit',
-        sag: 0.3,
-        name: 'Motor - & Diode Anode -> 2N2222 Collector',
-        role: 'Switched motor negative terminal sunk by 2N2222 transistor'
+        name: 'Motor (-) ➔ 2N2222 Collector',
+        role: 'Switched low-side motor return clamped by 1N4148 flyback diode'
       },
 
-      // ACTIVE BUZZER
+      // 6. ACTIVE PIEZO BUZZER
       {
         id: 'buzzer_sig',
         net: 'buzzer',
@@ -408,9 +471,8 @@ export class WireManager {
         to: { row: 35, col: 'G' },
         fromComp: 'buzzer',
         toComp: 'esp32',
-        sag: 0.75,
-        name: 'Active Buzzer + -> ESP32 GPIO14',
-        role: 'GPIO drive pin that triggers developer acoustic beep during alert events'
+        name: 'Buzzer (+) ➔ ESP32 GPIO14',
+        role: 'Direct GPIO tone drive triggering developer acoustic feedback'
       },
       {
         id: 'buzzer_gnd',
@@ -425,8 +487,7 @@ export class WireManager {
         to: { rail: '-bot', pin: 52 },
         fromComp: 'buzzer',
         toComp: 'breadboard',
-        sag: 0.35,
-        name: 'Active Buzzer - -> GND Rail',
+        name: 'Buzzer (-) ➔ GND Rail',
         role: 'Ground return path for piezo sounder'
       }
     ];
@@ -452,60 +513,84 @@ export class WireManager {
     const baseElevation = layerMap[def.net] || 1.35;
     const routeY = Math.max(pStart.y, pEnd.y) + (baseElevation - this.breadboard.height);
 
-    // Channel lane determination
-    let corner1, corner2;
+    const rawPoints = [];
+    rawPoints.push(pStart.clone());
+    rawPoints.push(new THREE.Vector3(pStart.x, routeY, pStart.z));
 
-    const isStartRail = Math.abs(pStart.z) > 1.8;
-    const isEndRail = Math.abs(pEnd.z) > 1.8;
+    const dx = Math.abs(pStart.x - pEnd.x);
+    const dz = Math.abs(pStart.z - pEnd.z);
 
-    if (isStartRail || isEndRail) {
-      // Connect to or from rail: step directly to rail channel
-      const railZ = isEndRail ? pEnd.z : pStart.z;
-      const turnZ = railZ > 0 ? (railZ - 0.28) : (railZ + 0.28);
-      corner1 = new THREE.Vector3(pStart.x, routeY, turnZ);
-      corner2 = new THREE.Vector3(pEnd.x, routeY, turnZ);
+    if (dx < 0.1) {
+      // Same row (pure vertical drop along Z)
+      // Up -> across in Z -> down (perfect 2-turn riser arch)
+    } else if (dz < 0.1) {
+      // Same column (pure horizontal drop along X)
+      // Up -> across in X -> down (perfect 2-turn riser arch)
     } else {
-      // Logic signal: step through channel between components
-      if (Math.abs(pStart.x - pEnd.x) < 0.6) {
-        const midZ = (pStart.z + pEnd.z) / 2;
-        corner1 = new THREE.Vector3(pStart.x, routeY, midZ);
-        corner2 = new THREE.Vector3(pEnd.x, routeY, midZ);
+      // 2D orthogonal stepped routing
+      const isStartRail = Math.abs(pStart.z) > 1.8;
+      const isEndRail = Math.abs(pEnd.z) > 1.8;
+
+      let channelZ;
+      if (isStartRail || isEndRail) {
+        const railZ = isEndRail ? pEnd.z : pStart.z;
+        channelZ = railZ > 0 ? (railZ - 0.35) : (railZ + 0.35);
+      } else if (pStart.z < -0.4 && pEnd.z < -0.4) {
+        channelZ = -1.65; // Top channel
+      } else if (pStart.z > 0.4 && pEnd.z > 0.4) {
+        channelZ = 1.65; // Bottom channel
       } else {
-        // Step to dedicated routing channel
-        let channelZ;
-        if (pStart.z < -0.4 && pEnd.z < -0.4) {
-          channelZ = -1.7; // Top trench
-        } else if (pStart.z > 0.4 && pEnd.z > 0.4) {
-          channelZ = 1.7; // Bottom trench
-        } else {
-          channelZ = (pStart.z + pEnd.z) / 2; // Mid trough
-        }
-        corner1 = new THREE.Vector3(pStart.x, routeY, channelZ);
-        corner2 = new THREE.Vector3(pEnd.x, routeY, channelZ);
+        channelZ = (pStart.z + pEnd.z) / 2; // Central trough
+      }
+
+      rawPoints.push(new THREE.Vector3(pStart.x, routeY, channelZ));
+      rawPoints.push(new THREE.Vector3(pEnd.x, routeY, channelZ));
+    }
+
+    rawPoints.push(new THREE.Vector3(pEnd.x, routeY, pEnd.z));
+    rawPoints.push(pEnd.clone());
+
+    // Deduplicate consecutive waypoints that are closer than 0.05
+    const cleanPoints = [];
+    for (let i = 0; i < rawPoints.length; i++) {
+      if (cleanPoints.length === 0 || cleanPoints[cleanPoints.length - 1].distanceTo(rawPoints[i]) > 0.05) {
+        cleanPoints.push(rawPoints[i]);
       }
     }
 
-    // Waypoints with vertical riser legs
-    const vStartTop = new THREE.Vector3(pStart.x, routeY, pStart.z);
-    const vEndTop = new THREE.Vector3(pEnd.x, routeY, pEnd.z);
-
-    const rawPoints = [pStart.clone(), vStartTop, corner1, corner2, vEndTop, pEnd.clone()];
+    if (cleanPoints.length < 2) {
+      return new THREE.LineCurve3(pStart, pEnd);
+    }
 
     // Generate filleted points for rounded 90-degree corners
     const filletedPoints = [];
-    filletedPoints.push(rawPoints[0]);
+    filletedPoints.push(cleanPoints[0]);
 
     const filletDist = 0.16; // Radius of corner bend
-    for (let i = 1; i < rawPoints.length - 1; i++) {
-      const prev = rawPoints[i - 1];
-      const curr = rawPoints[i];
-      const next = rawPoints[i + 1];
+    for (let i = 1; i < cleanPoints.length - 1; i++) {
+      const prev = cleanPoints[i - 1];
+      const curr = cleanPoints[i];
+      const next = cleanPoints[i + 1];
+
+      const distIn = curr.distanceTo(prev);
+      const distOut = curr.distanceTo(next);
+
+      if (distIn < 0.04 || distOut < 0.04) {
+        filletedPoints.push(curr);
+        continue;
+      }
 
       const dirIn = new THREE.Vector3().subVectors(prev, curr).normalize();
       const dirOut = new THREE.Vector3().subVectors(next, curr).normalize();
 
-      const dIn = Math.min(filletDist, curr.distanceTo(prev) * 0.4);
-      const dOut = Math.min(filletDist, curr.distanceTo(next) * 0.4);
+      // Check if collinear
+      const dot = dirIn.dot(dirOut);
+      if (Math.abs(dot) > 0.98) {
+        continue;
+      }
+
+      const dIn = Math.min(filletDist, distIn * 0.4);
+      const dOut = Math.min(filletDist, distOut * 0.4);
 
       const pBefore = new THREE.Vector3().copy(curr).addScaledVector(dirIn, dIn);
       const pAfter = new THREE.Vector3().copy(curr).addScaledVector(dirOut, dOut);
@@ -513,7 +598,7 @@ export class WireManager {
       filletedPoints.push(pBefore);
       filletedPoints.push(pAfter);
     }
-    filletedPoints.push(rawPoints[rawPoints.length - 1]);
+    filletedPoints.push(cleanPoints[cleanPoints.length - 1]);
 
     return new THREE.CatmullRomCurve3(filletedPoints, false, 'catmullrom', 0.05);
   }

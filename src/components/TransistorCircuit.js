@@ -182,31 +182,31 @@ export class TransistorCircuit {
     // 3x 220Ω Resistors (Red-Red-Brown-Gold) for RGB LED channels
     this.resistors = new THREE.Group();
 
-    // 1kΩ resistor at row 34 to row 57 (or bridging to base)
+    // 1kΩ base resistor sitting neatly across Row 57 Col C to Col D (driving 2N2222 Base)
     this.createAxialResistor({
       name: '1kΩ Base Resistor',
-      desc: '1kΩ 1/4W metal film resistor connecting ESP32 GPIO18 to the base of the 2N2222 transistor. Limits base drive current to ~2.6mA, ensuring hard saturation without overloading the microcontroller.',
+      desc: '1kΩ 1/4W metal film resistor connecting ESP32 GPIO18 jumper line to the base of the 2N2222 transistor. Limits base drive current to ~2.6mA, ensuring hard saturation.',
       specs: ['1,000 Ω (1 kΩ)', 'Brown-Black-Red-Gold', '1/4 Watt Rating', '5% Tolerance'],
       colorBands: ['#854d0e', '#000000', '#dc2626', '#eab308'],
-      startHole: { row: 34, col: 'G' },
-      endHole: { row: 57, col: 'C' }
+      startHole: { row: 57, col: 'C' },
+      endHole: { row: 57, col: 'D' }
     });
 
-    // 3x 220Ω resistors for RGB LED
+    // 3x 220Ω compact current-limiting resistors for RGB LED channels (Col B to Col C)
     const ledResistors = [
-      { name: '220Ω Red Resistor', gpio: 'GPIO15', startRow: 30, endRow: 46 },
-      { name: '220Ω Green Resistor', gpio: 'GPIO16', startRow: 31, endRow: 49 },
-      { name: '220Ω Blue Resistor', gpio: 'GPIO17', startRow: 32, endRow: 48 }
+      { name: '220Ω Red Resistor', gpio: 'GPIO15', row: 46 },
+      { name: '220Ω Blue Resistor', gpio: 'GPIO17', row: 48 },
+      { name: '220Ω Green Resistor', gpio: 'GPIO16', row: 49 }
     ];
 
     ledResistors.forEach(r => {
       this.createAxialResistor({
         name: r.name,
-        desc: `220Ω 1/4W current-limiting resistor connecting ${r.gpio} to the RGB LED anode. Sets forward current to ~12mA for maximum visual brightness and longevity.`,
+        desc: `220Ω 1/4W current-limiting resistor connecting ${r.gpio} jumper wire to the RGB LED anode. Sets forward current to ~12mA.`,
         specs: ['220 Ω', 'Red-Red-Brown-Gold', '1/4 Watt Rating', '5% Tolerance'],
         colorBands: ['#dc2626', '#dc2626', '#854d0e', '#eab308'],
-        startHole: { row: r.startRow, col: 'C' },
-        endHole: { row: r.endRow, col: 'B' }
+        startHole: { row: r.row, col: 'B' },
+        endHole: { row: r.row, col: 'C' }
       });
     });
 
@@ -226,56 +226,61 @@ export class TransistorCircuit {
     const pStart = this.breadboard.getHolePos(config.startHole);
     const pEnd = this.breadboard.getHolePos(config.endHole);
 
-    // Ceramic beige body
-    const bodyLength = 0.45;
-    const bodyRadius = 0.12;
+    // Ceramic beige body (compact 3.6mm length, 1.4mm radius)
+    const bodyLength = 0.36;
+    const bodyRadius = 0.11;
     const bodyGeo = new THREE.CylinderGeometry(bodyRadius, bodyRadius, bodyLength, 16);
-    bodyGeo.rotateZ(Math.PI / 2);
+
+    const isAlongX = Math.abs(pStart.x - pEnd.x) > Math.abs(pStart.z - pEnd.z);
+    if (isAlongX) {
+      bodyGeo.rotateZ(Math.PI / 2);
+    } else {
+      bodyGeo.rotateX(Math.PI / 2);
+    }
 
     const bodyMat = new THREE.MeshStandardMaterial({
       color: 0xe5d0b1, // Tan ceramic
-      roughness: 0.5
+      roughness: 0.55
     });
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     body.castShadow = true;
 
     // Color bands
-    const bandGeo = new THREE.CylinderGeometry(bodyRadius * 1.02, bodyRadius * 1.02, 0.04, 16);
-    bandGeo.rotateZ(Math.PI / 2);
+    const bandGeo = new THREE.CylinderGeometry(bodyRadius * 1.03, bodyRadius * 1.03, 0.035, 16);
+    if (isAlongX) {
+      bandGeo.rotateZ(Math.PI / 2);
+    } else {
+      bandGeo.rotateX(Math.PI / 2);
+    }
 
-    const offsets = [-0.14, -0.05, 0.04, 0.14];
+    const offsets = [-0.11, -0.04, 0.03, 0.11];
     config.colorBands.forEach((color, i) => {
       const bandMat = new THREE.MeshStandardMaterial({ color: new THREE.Color(color), roughness: 0.3 });
       const band = new THREE.Mesh(bandGeo, bandMat);
-      band.position.x = offsets[i];
+      if (isAlongX) {
+        band.position.x = offsets[i];
+      } else {
+        band.position.z = offsets[i];
+      }
       body.add(band);
     });
 
-    // Elevated center position
+    // Elevated center position resting just above breadboard
     const midX = (pStart.x + pEnd.x) / 2;
     const midZ = (pStart.z + pEnd.z) / 2;
-    const elevatedY = this.breadboard.height + 0.35;
+    const elevatedY = this.breadboard.height + 0.18;
 
     body.position.set(midX, elevatedY, midZ);
 
-    // Wire leads bent into holes
+    // Wire leads bent down into holes
     const leadMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9, roughness: 0.15 });
+    const leadGeo = new THREE.CylinderGeometry(0.016, 0.016, elevatedY - this.breadboard.height + 0.05, 8);
 
-    const curve1 = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(midX - bodyLength / 2, elevatedY, midZ),
-      new THREE.Vector3(pStart.x, elevatedY, pStart.z),
-      pStart
-    ]);
-    const geo1 = new THREE.TubeGeometry(curve1, 12, 0.02, 8, false);
-    const lead1 = new THREE.Mesh(geo1, leadMat);
+    const lead1 = new THREE.Mesh(leadGeo, leadMat);
+    lead1.position.set(pStart.x, (elevatedY + this.breadboard.height) / 2, pStart.z);
 
-    const curve2 = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(midX + bodyLength / 2, elevatedY, midZ),
-      new THREE.Vector3(pEnd.x, elevatedY, pEnd.z),
-      pEnd
-    ]);
-    const geo2 = new THREE.TubeGeometry(curve2, 12, 0.02, 8, false);
-    const lead2 = new THREE.Mesh(geo2, leadMat);
+    const lead2 = new THREE.Mesh(leadGeo, leadMat);
+    lead2.position.set(pEnd.x, (elevatedY + this.breadboard.height) / 2, pEnd.z);
 
     resGroup.add(body, lead1, lead2);
     this.resistors.add(resGroup);
