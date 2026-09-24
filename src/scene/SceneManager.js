@@ -81,11 +81,14 @@ export class SceneManager {
   initControls() {
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.dampingFactor = 0.05;
+    this.controls.dampingFactor = 0.06;
     this.controls.screenSpacePanning = true;
-    this.controls.minDistance = 1.2;
-    this.controls.maxDistance = 25;
-    this.controls.maxPolarAngle = Math.PI - 0.05;
+    this.controls.minDistance = 1.0;
+    this.controls.maxDistance = 22;
+    this.controls.maxPolarAngle = Math.PI / 2 - 0.01; // Clamp above table surface
+    this.controls.minPolarAngle = 0.02; // Full overhead top inspection
+    this.controls.minZoom = 0.6;
+    this.controls.maxZoom = 5.0;
     this.controls.target.set(0, 0.4, 0); // Center of circuit
     this.controls.update();
   }
