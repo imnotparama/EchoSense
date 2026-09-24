@@ -130,10 +130,10 @@ export class INMP441 {
   }
 
   createSensorAndPort() {
-    // Gold acoustic sound port ring in center
+    // Gold acoustic sound port ring in center with ENIG finish
     const ringGeo = new THREE.RingGeometry(0.08, 0.16, 24);
     const ringMat = new THREE.MeshStandardMaterial({
-      color: 0xd4af37, // Gold
+      color: 0xd4af37, // Gold ENIG
       metalness: 0.95,
       roughness: 0.1
     });
@@ -142,24 +142,82 @@ export class INMP441 {
     ring.position.set(0, 0.09, -0.15);
     this.group.add(ring);
 
-    // Sound port hole
+    // Acoustic micro-mesh inside sound port
+    const meshCanvas = document.createElement('canvas');
+    meshCanvas.width = 128;
+    meshCanvas.height = 128;
+    const mCtx = meshCanvas.getContext('2d');
+    mCtx.fillStyle = '#0a0a0a';
+    mCtx.fillRect(0, 0, 128, 128);
+    mCtx.strokeStyle = '#27272a';
+    mCtx.lineWidth = 2;
+    for (let i = 0; i <= 128; i += 12) {
+      mCtx.beginPath();
+      mCtx.moveTo(i, 0);
+      mCtx.lineTo(i, 128);
+      mCtx.stroke();
+      mCtx.beginPath();
+      mCtx.moveTo(0, i);
+      mCtx.lineTo(128, i);
+      mCtx.stroke();
+    }
+    const meshTex = new THREE.CanvasTexture(meshCanvas);
+    meshTex.minFilter = THREE.LinearFilter;
     const holeGeo = new THREE.CircleGeometry(0.08, 24);
-    const holeMat = new THREE.MeshBasicMaterial({ color: 0x050505 });
+    const holeMat = new THREE.MeshStandardMaterial({ map: meshTex, roughness: 0.8 });
     const hole = new THREE.Mesh(holeGeo, holeMat);
     hole.rotation.x = -Math.PI / 2;
     hole.position.set(0, 0.091, -0.15);
     this.group.add(hole);
 
-    // Surface-mount MEMS package (metallic square chip)
+    // Surface-mount MEMS package (metallic square chip with laser marking)
     const chipGeo = new THREE.BoxGeometry(0.35, 0.12, 0.28);
     const chipMat = new THREE.MeshStandardMaterial({
-      color: 0xc0c0c0,
-      metalness: 0.9,
-      roughness: 0.15
+      color: 0xd4d4d8,
+      metalness: 0.92,
+      roughness: 0.18
     });
     const chip = new THREE.Mesh(chipGeo, chipMat);
     chip.position.set(0.45, 0.14, -0.15);
+    chip.castShadow = true;
     this.group.add(chip);
+
+    // SMD 0402 Decoupling Capacitor beside MEMS chip (Beige ceramic body + silver end caps)
+    const capBodyMat = new THREE.MeshStandardMaterial({ color: 0xca8a04, roughness: 0.5 });
+    const capTermMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.15 });
+
+    const capGroup = new THREE.Group();
+    const capBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.08), capBodyMat);
+    const capT1 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.082, 0.082), capTermMat);
+    capT1.position.x = -0.06;
+    const capT2 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.082, 0.082), capTermMat);
+    capT2.position.x = 0.06;
+    capGroup.add(capBody, capT1, capT2);
+    capGroup.position.set(-0.45, 0.12, -0.15);
+    this.group.add(capGroup);
+
+    // SMD 0402 Pull-down Resistor (Black body + silver end caps)
+    const resBodyMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.6 });
+    const resGroup = new THREE.Group();
+    const resBody = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.08, 0.08), resBodyMat);
+    const resT1 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.082, 0.082), capTermMat);
+    resT1.position.x = -0.06;
+    const resT2 = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.082, 0.082), capTermMat);
+    resT2.position.x = 0.06;
+    resGroup.add(resBody, resT1, resT2);
+    resGroup.position.set(-0.45, 0.12, 0.1);
+    this.group.add(resGroup);
+
+    // Gold circular test points (TP1, TP2)
+    const tpGeo = new THREE.CircleGeometry(0.045, 16);
+    const tpMat = new THREE.MeshStandardMaterial({ color: 0xd4af37, metalness: 0.95, roughness: 0.15 });
+    const tp1 = new THREE.Mesh(tpGeo, tpMat);
+    tp1.rotation.x = -Math.PI / 2;
+    tp1.position.set(0.45, 0.086, 0.15);
+    const tp2 = new THREE.Mesh(tpGeo, tpMat);
+    tp2.rotation.x = -Math.PI / 2;
+    tp2.position.set(0.25, 0.086, 0.15);
+    this.group.add(tp1, tp2);
   }
 
   createHeaderPins() {
