@@ -84,6 +84,13 @@ export class RGBLED {
     const rim = new THREE.Mesh(rimGeo, rimMat);
     rim.position.y = 0.04;
 
+    // Cathode flat index notch on rim (identifies Pin 2 Common Cathode)
+    const notchGeo = new THREE.BoxGeometry(0.12, 0.082, 0.08);
+    const notchMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
+    const notch = new THREE.Mesh(notchGeo, notchMat);
+    notch.position.set(-0.02, 0.04, -radius * 1.05);
+    rim.add(notch);
+
     const dome = new THREE.Mesh(domeGeo, this.ledMaterial);
     dome.position.y = height;
 
@@ -98,12 +105,18 @@ export class RGBLED {
     const anvil = new THREE.Mesh(anvilGeo, metalMat);
     anvil.position.set(0.06, 0.28, 0);
 
-    bulbGroup.add(cyl, rim, dome, post, anvil);
+    // 3 microscopic semiconductor dies (Red, Green, Blue) sitting on the anvil
+    const dieMat = new THREE.MeshStandardMaterial({ color: 0x00f0ff, emissive: 0x00f0ff, emissiveIntensity: 1.0 });
+    const die = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.03), dieMat);
+    die.position.set(0.06, 0.35, 0);
+    this.dieMesh = die;
+
+    bulbGroup.add(cyl, rim, dome, post, anvil, die);
 
     // Position bulb above the 4 leads
     const centerX = (this.breadboard.getRowX(46) + this.breadboard.getRowX(49)) / 2;
     const posZ = this.breadboard.getColZ('C');
-    const posY = this.breadboard.height + 0.85;
+    const posY = this.breadboard.height + 0.95;
 
     bulbGroup.position.set(centerX, posY, posZ);
     this.group.add(bulbGroup);
@@ -111,7 +124,7 @@ export class RGBLED {
   }
 
   createLeads() {
-    // 4 metal wire legs bent down into breadboard rows 46, 47, 48, 49
+    // 4 metal wire legs gracefully splaying from bulb base down into breadboard rows 46, 47, 48, 49
     const leadMat = new THREE.MeshStandardMaterial({
       color: 0xd4d4d8,
       metalness: 0.9,
@@ -119,21 +132,32 @@ export class RGBLED {
     });
 
     const colZ = this.breadboard.getColZ('C');
-    const bulbY = this.breadboard.height + 0.85;
+    const bulbY = this.breadboard.height + 0.95;
     const boardY = this.breadboard.height + 0.01;
+    const bulbCenterX = (this.breadboard.getRowX(46) + this.breadboard.getRowX(49)) / 2;
 
     const leadPositions = [
-      { row: this.rows.red, name: 'Red Anode' },
-      { row: this.rows.cathode, name: 'Common Cathode' },
-      { row: this.rows.blue, name: 'Blue Anode' },
-      { row: this.rows.green, name: 'Green Anode' }
+      { row: this.rows.red,     relX: -0.12, name: 'Red Anode' },
+      { row: this.rows.cathode, relX: -0.04, name: 'Common Cathode' },
+      { row: this.rows.blue,    relX:  0.04, name: 'Blue Anode' },
+      { row: this.rows.green,   relX:  0.12, name: 'Green Anode' }
     ];
 
     leadPositions.forEach((lead) => {
-      const x = this.breadboard.getRowX(lead.row);
-      const leadGeo = new THREE.CylinderGeometry(0.02, 0.02, bulbY - boardY, 8);
+      const targetX = this.breadboard.getRowX(lead.row);
+      const topX = bulbCenterX + lead.relX;
+
+      // Realistic bent wire lead with shoulder transition
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(topX, bulbY, colZ),
+        new THREE.Vector3(topX, bulbY - 0.2, colZ),
+        new THREE.Vector3(targetX, bulbY - 0.45, colZ),
+        new THREE.Vector3(targetX, boardY, colZ)
+      ]);
+
+      const leadGeo = new THREE.TubeGeometry(curve, 16, 0.02, 8, false);
       const leadMesh = new THREE.Mesh(leadGeo, leadMat);
-      leadMesh.position.set(x, (bulbY + boardY) / 2, colZ);
+      leadMesh.castShadow = true;
       this.group.add(leadMesh);
     });
   }
