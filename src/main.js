@@ -116,7 +116,9 @@ class EchoSenseApp {
       this.rgbLed.group,
       this.vibeMotor.group,
       this.buzzer.group,
+      this.capacitors.group,
       ...this.capacitors.group.children,
+      this.transCircuit.group,
       ...this.transCircuit.group.children
     ];
 
@@ -205,15 +207,22 @@ class EchoSenseApp {
         if (root && root.userData?.name) {
           this.activeComponentMesh = root;
 
-          // Map component name to sidebar key
+          // Map component name to sidebar key with complete coverage
           const compMap = {
             'ESP32-S3 DevKitC-1': 'esp32',
+            'INMP441 I2S Microphone': 'inmp441',
             'INMP441 I2S Digital MEMS Microphone': 'inmp441',
+            '0.96" I2C OLED Display (SSD1306)': 'oled',
+            'SSD1306 0.96" OLED Display': 'oled',
             'SSD1306 0.96" OLED Display (128x64)': 'oled',
             '5mm Common Cathode RGB LED': 'rgbLed',
             '10mm Coin Vibration Motor': 'vibeMotor',
+            '12mm Active Piezo Buzzer': 'buzzer',
             'Active Piezo Buzzer': 'buzzer',
-            '2N2222 NPN BJT Transistor': 'transCircuit'
+            '2N2222 NPN BJT Transistor': 'transCircuit',
+            'Filter Decoupling Capacitors': 'capacitors',
+            '100 µF Electrolytic Capacitor': 'capacitors',
+            '0.1 µF Ceramic Decoupling Capacitor': 'capacitors'
           };
           const key = compMap[root.userData.name] || 'esp32';
           this.ui.populateSidebarPinout(key);
@@ -224,6 +233,9 @@ class EchoSenseApp {
 
           // Isolate circuit path for this component
           this.isolateComponentCircuit(root.userData.name);
+
+          // Smoothly glide camera to clear CAD close-up view of the clicked component
+          this.sceneMgr.focusOnObject(root);
         }
       }
     });
@@ -365,12 +377,13 @@ class EchoSenseApp {
   selectComponent(compKey) {
     const compMap = {
       esp32: { group: this.esp32.group, name: 'ESP32-S3 DevKitC-1' },
-      inmp441: { group: this.inmp441.group, name: 'INMP441 I2S Digital MEMS Microphone' },
-      oled: { group: this.oled.group, name: 'SSD1306 0.96" OLED Display (128x64)' },
+      inmp441: { group: this.inmp441.group, name: 'INMP441 I2S Microphone' },
+      oled: { group: this.oled.group, name: '0.96" I2C OLED Display (SSD1306)' },
       rgbLed: { group: this.rgbLed.group, name: '5mm Common Cathode RGB LED' },
       vibeMotor: { group: this.vibeMotor.group, name: '10mm Coin Vibration Motor' },
-      buzzer: { group: this.buzzer.group, name: 'Active Piezo Buzzer' },
-      transCircuit: { group: this.transCircuit.group, name: '2N2222 NPN BJT Transistor' }
+      buzzer: { group: this.buzzer.group, name: '12mm Active Piezo Buzzer' },
+      transCircuit: { group: this.transCircuit.group, name: '2N2222 NPN BJT Transistor' },
+      capacitors: { group: this.capacitors.group, name: 'Filter Decoupling Capacitors' }
     };
 
     const target = compMap[compKey];
@@ -401,7 +414,19 @@ class EchoSenseApp {
         nets: ['i2s', 'power', 'ground'],
         relatedComps: ['inmp441', 'esp32', 'breadboard']
       },
+      'INMP441 I2S Digital MEMS Microphone': {
+        nets: ['i2s', 'power', 'ground'],
+        relatedComps: ['inmp441', 'esp32', 'breadboard']
+      },
       '0.96" I2C OLED Display (SSD1306)': {
+        nets: ['i2c', 'power', 'ground'],
+        relatedComps: ['oled', 'esp32', 'breadboard']
+      },
+      'SSD1306 0.96" OLED Display': {
+        nets: ['i2c', 'power', 'ground'],
+        relatedComps: ['oled', 'esp32', 'breadboard']
+      },
+      'SSD1306 0.96" OLED Display (128x64)': {
         nets: ['i2c', 'power', 'ground'],
         relatedComps: ['oled', 'esp32', 'breadboard']
       },
@@ -417,13 +442,29 @@ class EchoSenseApp {
         nets: ['led', 'ground'],
         relatedComps: ['rgbLed', 'esp32', 'breadboard']
       },
+      '12mm Active Piezo Buzzer': {
+        nets: ['buzzer', 'ground'],
+        relatedComps: ['buzzer', 'esp32', 'breadboard']
+      },
       'Active Piezo Buzzer': {
         nets: ['buzzer', 'ground'],
         relatedComps: ['buzzer', 'esp32', 'breadboard']
       },
+      'Filter Decoupling Capacitors': {
+        nets: ['power', 'ground'],
+        relatedComps: ['capacitors', 'inmp441', 'esp32', 'breadboard']
+      },
+      '100 µF Electrolytic Capacitor': {
+        nets: ['power', 'ground'],
+        relatedComps: ['capacitors', 'inmp441', 'esp32', 'breadboard']
+      },
+      '0.1 µF Ceramic Decoupling Capacitor': {
+        nets: ['power', 'ground'],
+        relatedComps: ['capacitors', 'inmp441', 'esp32', 'breadboard']
+      },
       'ESP32-S3 DevKitC-1': {
         nets: ['power', 'ground', 'i2s', 'i2c', 'motor', 'led', 'buzzer'],
-        relatedComps: ['esp32', 'inmp441', 'oled', 'vibeMotor', 'rgbLed', 'buzzer', 'transCircuit', 'breadboard']
+        relatedComps: ['esp32', 'inmp441', 'oled', 'vibeMotor', 'rgbLed', 'buzzer', 'transCircuit', 'capacitors', 'breadboard']
       }
     };
 
@@ -533,6 +574,7 @@ class EchoSenseApp {
       },
       onFocusPin: (pinKey) => this.focusPinConnection(pinKey),
       onComponentSelect: (compKey) => this.selectComponent(compKey),
+      onZoomComponent: (compKey) => this.selectComponent(compKey),
       onTriggerAlert: (alertType) => this.triggerAlert(alertType),
       onToggleAudio: () => this.soundSynth.toggleMute(),
       onOpacityChange: (alpha) => this.breadboard.setOpacity(alpha),

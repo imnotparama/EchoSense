@@ -1484,3 +1484,28 @@ body.clean-mode #btn-clean-view {
   color: #a7f3d0;
 }
 
+.sec-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.sub-action-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-glass);
+  color: var(--text-dim);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sub-action-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+

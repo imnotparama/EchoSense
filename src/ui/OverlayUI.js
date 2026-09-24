@@ -147,21 +147,33 @@ export class OverlayUI {
         ]
       },
       transCircuit: {
-        name: '2N2222 DRIVER & DECOUPLING',
-        sub: 'Low-Side Switch + 100µF/0.1µF Filters',
-        protocol: 'Discrete Power Conditioning',
+        name: '2N2222 DRIVER & PASSIVES',
+        sub: 'Low-Side Switch + 1N4148 Diode',
+        protocol: 'Discrete Power Switching',
         voltage: '5.0V / 3.3V',
         pins: [
           { name: 'Base', role: '1kΩ Resistor Input', target: 'ESP32 GPIO18', pinKey: 'GPIO18', color: 'Yellow', proto: 'PWM' },
           { name: 'Collector', role: 'Switched Motor & Flyback Clamp', target: 'Motor (-) & 1N4148', pinKey: 'GPIO18', color: 'Yellow', proto: 'Driver' },
-          { name: 'Emitter', role: 'Saturated Ground Sink', target: 'Bottom - GND Rail', pinKey: 'GND', color: 'Black', proto: 'GND' },
-          { name: 'Cap 100uF', role: 'Electrolytic Low-Freq Ripple Filter', target: '3.3V to GND Rail', pinKey: '3V3', color: 'Red', proto: 'Filter' }
+          { name: 'Emitter', role: 'Saturated Ground Sink', target: 'Bottom - GND Rail', pinKey: 'GND', color: 'Black', proto: 'GND' }
+        ]
+      },
+      capacitors: {
+        name: 'FILTER DECOUPLING CAPACITORS',
+        sub: '100µF Bulk Can + 0.1µF Ceramic Filter',
+        protocol: 'Power Rail Filtering',
+        voltage: '3.3V DC',
+        pins: [
+          { name: '100µF (+)', role: 'Bulk Audio Rail Decoupling', target: 'Top + 3.3V Rail', pinKey: '3V3', color: 'Red', proto: 'Filter' },
+          { name: '100µF (-)', role: 'Low-ESR Ground Return', target: 'Top - GND Rail', pinKey: 'GND', color: 'Black', proto: 'GND' },
+          { name: '0.1µF VDD', role: 'High-Freq RF Noise Bypass', target: 'INMP441 Pin 1 (VDD)', pinKey: '3V3', color: 'Orange', proto: 'Bypass' },
+          { name: '0.1µF GND', role: 'Direct Ground Shunt', target: 'INMP441 Pin 2 (GND)', pinKey: 'GND', color: 'Black', proto: 'GND' }
         ]
       }
     };
   }
 
   populateSidebarPinout(compKey) {
+    this.currentCompKey = compKey;
     const data = this.pinSpecsMap[compKey];
     if (!data || !this.sidebarPinTable) return;
 
@@ -315,6 +327,20 @@ export class OverlayUI {
           this.callbacks.onComponentSelect(compKey);
         }
       });
+    });
+
+    // Zoom in on active component
+    document.getElementById('btn-zoom-comp')?.addEventListener('click', () => {
+      if (this.callbacks.onZoomComponent) {
+        this.callbacks.onZoomComponent(this.currentCompKey || 'esp32');
+      }
+    });
+
+    // Reset board overview camera
+    document.getElementById('btn-reset-view')?.addEventListener('click', () => {
+      if (this.callbacks.onCameraChange) {
+        this.callbacks.onCameraChange('reset');
+      }
     });
 
     // Net Filter buttons

@@ -246,63 +246,140 @@ export class ESP32S3 {
     label.position.set(-0.6, 0.401, 0);
     this.group.add(label);
 
-    // PCB Antenna trace area (distinct black/gold pattern on left of shield)
-    const antGeo = new THREE.BoxGeometry(0.8, 0.16, 1.8);
+    // PCB Antenna trace area with realistic gold Inverted-F serpentine trace
+    const antGeo = new THREE.BoxGeometry(0.85, 0.16, 1.8);
     const antMat = new THREE.MeshStandardMaterial({
-      color: 0x090d12,
-      roughness: 0.5
+      color: 0x0a0f18,
+      roughness: 0.4
     });
     const ant = new THREE.Mesh(antGeo, antMat);
     ant.position.set(-2.25, 0.08, 0);
     this.group.add(ant);
+
+    const antCanvas = document.createElement('canvas');
+    antCanvas.width = 512;
+    antCanvas.height = 1024;
+    const aCtx = antCanvas.getContext('2d');
+    aCtx.fillStyle = '#0a0f18';
+    aCtx.fillRect(0, 0, 512, 1024);
+
+    aCtx.strokeStyle = '#f59e0b';
+    aCtx.lineWidth = 28;
+    aCtx.lineCap = 'square';
+    aCtx.lineJoin = 'miter';
+
+    aCtx.beginPath();
+    aCtx.moveTo(400, 180);
+    aCtx.lineTo(120, 180);
+    aCtx.lineTo(120, 840);
+    aCtx.stroke();
+
+    const fingers = 5;
+    const startY = 250;
+    const stepY = (800 - startY) / fingers;
+    for (let f = 0; f < fingers; f++) {
+      const y1 = startY + f * stepY;
+      const y2 = y1 + stepY * 0.5;
+      aCtx.beginPath();
+      aCtx.moveTo(120, y1);
+      aCtx.lineTo(380, y1);
+      aCtx.lineTo(380, y2);
+      aCtx.lineTo(120, y2);
+      aCtx.stroke();
+    }
+
+    aCtx.fillStyle = '#f59e0b';
+    aCtx.font = 'bold 36px monospace';
+    aCtx.textAlign = 'center';
+    aCtx.fillText('2.4GHz ANT', 256, 960);
+
+    const antTex = new THREE.CanvasTexture(antCanvas);
+    antTex.colorSpace = THREE.SRGBColorSpace;
+    antTex.generateMipmaps = false;
+    antTex.minFilter = THREE.LinearFilter;
+    antTex.magFilter = THREE.LinearFilter;
+    antTex.anisotropy = 16;
+
+    const antTopGeo = new THREE.PlaneGeometry(0.83, 1.76);
+    const antTopMat = new THREE.MeshStandardMaterial({
+      map: antTex,
+      roughness: 0.35,
+      metalness: 0.6
+    });
+    const antTop = new THREE.Mesh(antTopGeo, antTopMat);
+    antTop.rotation.x = -Math.PI / 2;
+    antTop.position.set(-2.25, 0.165, 0);
+    this.group.add(antTop);
   }
 
   createUSBConnector() {
-    // USB-C Connector facing right (towards breadboard center/front)
-    const usbLength = 0.9;
-    const usbWidth = 0.8;
-    const usbHeight = 0.35;
-
-    const usbGeo = new THREE.BoxGeometry(usbLength, usbHeight, usbWidth);
+    // DevKitC-1 authentic Dual USB-C Ports (USB OTG + UART/COM)
     const usbMat = new THREE.MeshStandardMaterial({
       color: 0xe2e8f0,
       metalness: 0.95,
       roughness: 0.15
     });
+    const cavityMat = new THREE.MeshStandardMaterial({ color: 0x050505, roughness: 0.9 });
+    const tongueMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.6 });
 
-    const usb = new THREE.Mesh(usbGeo, usbMat);
-    usb.position.set(2.4, 0.25, 0);
-    usb.castShadow = true;
-    this.group.add(usb);
+    const ports = [
+      { z: -0.65, label: 'UART' },
+      { z: 0.65,  label: 'USB' }
+    ];
 
-    // Inner USB-C cavity & tongue
-    const cavityGeo = new THREE.BoxGeometry(0.1, 0.18, 0.6);
-    const cavityMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.8 });
-    const cavity = new THREE.Mesh(cavityGeo, cavityMat);
-    cavity.position.set(2.81, 0.25, 0);
-    this.group.add(cavity);
+    ports.forEach(p => {
+      const usbGeo = new THREE.BoxGeometry(0.85, 0.32, 0.72);
+      const usb = new THREE.Mesh(usbGeo, usbMat);
+      usb.position.set(2.45, 0.22, p.z);
+      usb.castShadow = true;
+      this.group.add(usb);
+
+      // Receptacle cavity
+      const cavityGeo = new THREE.BoxGeometry(0.08, 0.18, 0.52);
+      const cavity = new THREE.Mesh(cavityGeo, cavityMat);
+      cavity.position.set(2.84, 0.22, p.z);
+      this.group.add(cavity);
+
+      // Center connector tongue
+      const tongueGeo = new THREE.BoxGeometry(0.06, 0.04, 0.38);
+      const tongue = new THREE.Mesh(tongueGeo, tongueMat);
+      tongue.position.set(2.82, 0.22, p.z);
+      this.group.add(tongue);
+    });
   }
 
   createButtonsAndLEDs() {
-    // BOOT and RESET buttons
-    const btnMat = new THREE.MeshStandardMaterial({ color: 0xcccccc, metalness: 0.8, roughness: 0.2 });
-    const baseMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.7 });
+    // 40 MHz Surface Mount Quartz Crystal Oscillator
+    const crystalGeo = new THREE.BoxGeometry(0.35, 0.12, 0.24);
+    const crystalMat = new THREE.MeshStandardMaterial({
+      color: 0x94a3b8,
+      metalness: 0.85,
+      roughness: 0.25
+    });
+    const crystal = new THREE.Mesh(crystalGeo, crystalMat);
+    crystal.position.set(0.85, 0.14, 0);
+    this.group.add(crystal);
 
-    const btnGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.12, 16);
-    const baseGeo = new THREE.BoxGeometry(0.3, 0.1, 0.25);
+    // BOOT and RESET tactile micro-pushbuttons
+    const baseMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.7 });
+    const rstMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.4 }); // Red Reset cap
+    const bootMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.4 }); // Black Boot cap
 
-    // Reset Button
+    const btnGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.14, 16);
+    const baseGeo = new THREE.BoxGeometry(0.28, 0.1, 0.25);
+
+    // Reset Button (RST / EN)
     const rstBase = new THREE.Mesh(baseGeo, baseMat);
-    rstBase.position.set(1.4, 0.12, -0.7);
-    const rstBtn = new THREE.Mesh(btnGeo, btnMat);
-    rstBtn.position.set(1.4, 0.22, -0.7);
+    rstBase.position.set(1.5, 0.12, -0.65);
+    const rstBtn = new THREE.Mesh(btnGeo, rstMat);
+    rstBtn.position.set(1.5, 0.22, -0.65);
     this.group.add(rstBase, rstBtn);
 
-    // Boot Button
+    // Boot Button (BOOT)
     const bootBase = new THREE.Mesh(baseGeo, baseMat);
-    bootBase.position.set(1.4, 0.12, 0.7);
-    const bootBtn = new THREE.Mesh(btnGeo, btnMat);
-    bootBtn.position.set(1.4, 0.22, 0.7);
+    bootBase.position.set(1.5, 0.12, 0.65);
+    const bootBtn = new THREE.Mesh(btnGeo, bootMat);
+    bootBtn.position.set(1.5, 0.22, 0.65);
     this.group.add(bootBase, bootBtn);
 
     // Power Indicator LED (Red)

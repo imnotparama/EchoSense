@@ -109,6 +109,61 @@ export class OLEDDisplay {
     bezel.position.set(0, 0.089, -0.2);
     this.group.add(bezel);
 
+    // Flex Ribbon Cable (connecting glass display to PCB)
+    const ribbonGeo = new THREE.PlaneGeometry(1.6, 0.35);
+    const ribbonMat = new THREE.MeshStandardMaterial({
+      color: 0x92400e, // Amber Kapton flex cable
+      roughness: 0.4,
+      metalness: 0.2
+    });
+    const ribbon = new THREE.Mesh(ribbonGeo, ribbonMat);
+    ribbon.rotation.x = -Math.PI / 2;
+    ribbon.position.set(0, 0.085, 0.6);
+    this.group.add(ribbon);
+
+    // 4 Corner Mounting Holes with silver solder pads
+    const holeRingGeo = new THREE.RingGeometry(0.08, 0.16, 16);
+    const holeRingMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9, roughness: 0.2 });
+    const corners = [
+      { x: -1.15, z: -1.15 },
+      { x: 1.15,  z: -1.15 },
+      { x: -1.15, z: 1.15 },
+      { x: 1.15,  z: 1.15 }
+    ];
+    corners.forEach(c => {
+      const ring = new THREE.Mesh(holeRingGeo, holeRingMat);
+      ring.rotation.x = -Math.PI / 2;
+      ring.position.set(c.x, 0.085, c.z);
+      this.group.add(ring);
+    });
+
+    // Pin Silkscreen Label Strip above header pins
+    const silkCanvas = document.createElement('canvas');
+    silkCanvas.width = 512;
+    silkCanvas.height = 128;
+    const sCtx = silkCanvas.getContext('2d');
+    sCtx.fillStyle = '#1e3a8a';
+    sCtx.fillRect(0, 0, 512, 128);
+
+    sCtx.fillStyle = '#ffffff';
+    sCtx.font = 'bold 44px monospace';
+    sCtx.textAlign = 'center';
+    sCtx.textBaseline = 'middle';
+    ['GND', 'VCC', 'SCL', 'SDA'].forEach((label, i) => {
+      const x = 64 + i * 128;
+      sCtx.fillText(label, x, 64);
+    });
+
+    const silkTex = new THREE.CanvasTexture(silkCanvas);
+    silkTex.generateMipmaps = false;
+    silkTex.minFilter = THREE.LinearFilter;
+    const silkGeo = new THREE.PlaneGeometry(1.2, 0.3);
+    const silkMat = new THREE.MeshStandardMaterial({ map: silkTex, roughness: 0.4 });
+    const silkMesh = new THREE.Mesh(silkGeo, silkMat);
+    silkMesh.rotation.x = -Math.PI / 2;
+    silkMesh.position.set(0, 0.086, 0.85);
+    this.group.add(silkMesh);
+
     this.drawScreen();
   }
 

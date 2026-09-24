@@ -125,7 +125,7 @@
       <div class="sidebar-section">
         <div class="sidebar-sec-header">
           <span class="sec-title">COMPONENTS</span>
-          <span class="sec-badge">6 ICs</span>
+          <span class="sec-badge">8 Modules</span>
         </div>
         <div class="module-list">
           <div class="module-item active" data-comp="esp32">
@@ -173,8 +173,15 @@
           <div class="module-item" data-comp="transCircuit">
             <div class="mod-icon passives">⚡</div>
             <div class="mod-meta">
-              <span class="mod-name">2N2222 Driver & Caps</span>
+              <span class="mod-name">2N2222 Driver</span>
               <span class="mod-sub">Low-Side BJT + Diode</span>
+            </div>
+          </div>
+          <div class="module-item" data-comp="capacitors">
+            <div class="mod-icon passives">🔋</div>
+            <div class="mod-meta">
+              <span class="mod-name">Decoupling Caps</span>
+              <span class="mod-sub">100µF Bulk + 0.1µF Disc</span>
             </div>
           </div>
         </div>
@@ -183,8 +190,11 @@
       <!-- Section 2: Selected Component Pinout & Focus Table -->
       <div class="sidebar-section mt-sm">
         <div class="sidebar-sec-header">
-          <span class="sec-title" id="selected-comp-name">INMP441 PIN CONNECTIONS</span>
-          <span class="sec-badge text-cyan">PINOUT</span>
+          <span class="sec-title" id="selected-comp-name">PIN CONNECTIONS</span>
+          <div class="sec-header-actions">
+            <button id="btn-zoom-comp" class="sub-action-btn" title="Zoom in to inspect this component">🔍 Zoom</button>
+            <button id="btn-reset-view" class="sub-action-btn" title="Reset overview camera">🌐 Board</button>
+          </div>
         </div>
         <div id="sidebar-pin-table" class="sidebar-pin-table">
           <!-- Dynamically populated pinout entries with Focus buttons -->

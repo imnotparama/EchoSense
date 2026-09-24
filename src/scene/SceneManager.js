@@ -251,26 +251,32 @@ export class SceneManager {
   }
 
   focusOnObject(obj3D) {
-    if (this.isOrthoMode) {
-      const box = new THREE.Box3().setFromObject(obj3D);
-      const center = new THREE.Vector3();
-      box.getCenter(center);
-      this.controls.target.copy(center);
-      this.controls.update();
-      return;
-    }
+    if (!obj3D) return;
 
     const box = new THREE.Box3().setFromObject(obj3D);
     const center = new THREE.Vector3();
     box.getCenter(center);
 
+    const size = new THREE.Vector3();
+    box.getSize(size);
+    const maxDim = Math.max(size.x, size.z, size.y, 1.0);
+
+    if (this.isOrthoMode) {
+      this.controls.target.copy(center);
+      this.orthoCamera.zoom = Math.min(3.5, Math.max(1.8, 6.0 / maxDim));
+      this.orthoCamera.updateProjectionMatrix();
+      this.controls.update();
+      return;
+    }
+
+    // CAD close-up inspection angle: elevated 35-45 deg with clear view of silkscreen & pins
     const targetPos = new THREE.Vector3(
-      center.x + 1.8,
-      center.y + 2.5,
-      center.z + 2.8
+      center.x + maxDim * 0.45,
+      center.y + maxDim * 1.1 + 0.9,
+      center.z + maxDim * 1.2 + 0.8
     );
 
-    this.smoothTransition(targetPos, center);
+    this.smoothTransition(targetPos, center, 850);
   }
 
   focusOnPinConnection(pStart, pEnd) {

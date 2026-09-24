@@ -8,6 +8,17 @@ export class Capacitors {
     this.breadboard = breadboard;
     this.group = new THREE.Group();
     this.group.name = 'Filter_Capacitors';
+    this.group.userData = {
+      name: 'Filter Decoupling Capacitors',
+      category: 'POWER CONDITIONING',
+      desc: 'Dual decoupling stage comprising a 100µF low-ESR bulk electrolytic capacitor on the 3.3V power bus and a 0.1µF (104) ceramic disc capacitor across INMP441 VDD/GND, eliminating low-frequency ripple and high-frequency switching noise.',
+      specs: [
+        '100 µF 16V Bulk Electrolytic',
+        '0.1 µF (100nF) High-Freq Ceramic Disc',
+        'Direct 3.3V Audio Bus Filtering',
+        'Low-ESR Transient Absorption'
+      ]
+    };
 
     this.init();
   }
