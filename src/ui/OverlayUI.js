@@ -131,9 +131,9 @@ export class OverlayUI {
         voltage: '3.3V Logic',
         pins: [
           { name: 'Cathode', role: 'Common Ground Return Pin', target: 'Top - GND Rail', pinKey: 'GND', color: 'Black', proto: 'GND' },
-          { name: 'Red Anode', role: 'Red LED Die (Fire Emergency)', target: '220Ω ➔ GPIO15', pinKey: 'led', color: 'Orange', proto: 'GPIO' },
-          { name: 'Green Anode', role: 'Green LED Die (Doorbell / OK)', target: '220Ω ➔ GPIO16', pinKey: 'led', color: 'Green', proto: 'GPIO' },
-          { name: 'Blue Anode', role: 'Blue LED Die (Listening Status)', target: '220Ω ➔ GPIO17', pinKey: 'led', color: 'Blue', proto: 'GPIO' }
+          { name: 'Red Anode', role: 'Red LED Die (Fire Emergency)', target: '220Ω ➔ GPIO15', pinKey: 'led_red', color: 'Orange', proto: 'GPIO' },
+          { name: 'Green Anode', role: 'Green LED Die (Doorbell / OK)', target: '220Ω ➔ GPIO16', pinKey: 'led_green', color: 'Green', proto: 'GPIO' },
+          { name: 'Blue Anode', role: 'Blue LED Die (Listening Status)', target: '220Ω ➔ GPIO17', pinKey: 'led_blue', color: 'Blue', proto: 'GPIO' }
         ]
       },
       buzzer: {
