@@ -49,20 +49,27 @@ export class Buzzer {
     const hole = new THREE.Mesh(holeGeo, holeMat);
     hole.position.y = body.position.y + height / 2 + 0.01;
 
-    // Top "+" polarity marking
+    // Top "+" polarity marking & industrial wash seal label
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 512;
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#18181b';
-    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillRect(0, 0, 512, 512);
+
+    // Red polarity mark
     ctx.fillStyle = '#ef4444';
-    ctx.font = 'bold 50px monospace';
+    ctx.font = 'bold 110px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('+', 80, 80);
+    ctx.fillText('+', 140, 160);
+
+    // Silkscreen part info
+    ctx.fillStyle = '#a1a1aa';
+    ctx.font = 'bold 44px monospace';
+    ctx.fillText('BUZZER', 256, 380);
+    ctx.font = '32px monospace';
     ctx.fillStyle = '#71717a';
-    ctx.font = 'bold 20px monospace';
-    ctx.fillText('BUZZER', 128, 190);
+    ctx.fillText('5V • 85dB SPL', 256, 435);
 
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -75,6 +82,28 @@ export class Buzzer {
     const topCap = new THREE.Mesh(topGeo, topMat);
     topCap.rotation.x = -Math.PI / 2;
     topCap.position.y = body.position.y + height / 2 + 0.02;
+
+    // Removable wash seal tab (yellow sticker with black warning text and pull tab)
+    const sealCanvas = document.createElement('canvas');
+    sealCanvas.width = 256;
+    sealCanvas.height = 128;
+    const sCtx = sealCanvas.getContext('2d');
+    sCtx.fillStyle = '#facc15'; // Safety yellow
+    sCtx.fillRect(0, 0, 256, 128);
+    sCtx.fillStyle = '#000000';
+    sCtx.font = 'bold 22px sans-serif';
+    sCtx.textAlign = 'center';
+    sCtx.fillText('REMOVE SEAL', 128, 50);
+    sCtx.fillText('AFTER WASH', 128, 85);
+    const sealTex = new THREE.CanvasTexture(sealCanvas);
+    sealTex.minFilter = THREE.LinearFilter;
+
+    const sealGeo = new THREE.PlaneGeometry(0.55, 0.28);
+    const sealMat = new THREE.MeshStandardMaterial({ map: sealTex, roughness: 0.6 });
+    const seal = new THREE.Mesh(sealGeo, sealMat);
+    seal.rotation.x = -Math.PI / 2;
+    seal.position.set(0.12, body.position.y + height / 2 + 0.025, 0);
+    this.group.add(seal);
 
     // Metal pins into breadboard
     const pinMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9, roughness: 0.15 });
