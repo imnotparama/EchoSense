@@ -110,6 +110,23 @@ export class SchematicView {
             <text x="700" y="184" fill="#ffffff" font-size="9" font-family="monospace" font-weight="bold" text-anchor="middle">RGB</text>
             <text x="700" y="210" fill="#94a3b8" font-size="9" font-family="sans-serif" text-anchor="middle">Common Cathode</text>
           </g>
+
+          <!-- 6. PIEZO BUZZER (Bottom Right) -->
+          <g id="sch-buzzer" class="sch-node" data-net="buzzer" data-pin="gpio14">
+            <rect x="620" y="475" width="120" height="50" rx="6" fill="#18181b" stroke="#3b82f6" stroke-width="1.5"/>
+            <text x="680" y="495" fill="#f8fafc" font-size="11" font-family="monospace" font-weight="bold" text-anchor="middle">PIEZO BUZZER</text>
+            <text x="680" y="512" fill="#38bdf8" font-size="9" font-family="sans-serif" text-anchor="middle">5V • GPIO14</text>
+            <path d="M 570 335 L 610 335 L 610 500 L 620 500" stroke="#3b82f6" stroke-width="2" fill="none"/>
+          </g>
+
+          <!-- 7. DECOUPLING CAPACITORS (Bottom Left) -->
+          <g id="sch-caps" class="sch-node" data-net="power" data-pin="power">
+            <rect x="50" y="380" width="140" height="70" rx="6" fill="#0f172a" stroke="#06b6d4" stroke-width="1.5"/>
+            <text x="120" y="402" fill="#06b6d4" font-size="11" font-family="monospace" font-weight="bold" text-anchor="middle">FILTER CAPS</text>
+            <text x="120" y="420" fill="#94a3b8" font-size="9" font-family="monospace" text-anchor="middle">100µF Low-ESR</text>
+            <text x="120" y="435" fill="#94a3b8" font-size="9" font-family="monospace" text-anchor="middle">0.1µF Ceramic (104)</text>
+            <path d="M 190 415 L 230 415" stroke="#06b6d4" stroke-width="2" fill="none"/>
+          </g>
         </svg>
       </div>
       <div class="schematic-breadcrumb" id="sch-breadcrumb">
