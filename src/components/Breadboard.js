@@ -335,13 +335,16 @@ export class Breadboard {
         roughness: 0.5,
         metalness: 0.05,
         transparent: true,
-        opacity: 1.0
+        opacity: 1.0,
+        polygonOffset: true,
+        polygonOffsetFactor: -2,
+        polygonOffsetUnits: -2
       });
       this.transparentMaterials.push(plateMat);
 
       const plate = new THREE.Mesh(plateGeo, plateMat);
       plate.rotation.x = -Math.PI / 2;
-      plate.position.y = this.height + 0.001;
+      plate.position.y = this.height + 0.005;
       plate.receiveShadow = true;
       this.group.add(plate);
       this.facePlateMesh = plate;
