@@ -109,18 +109,26 @@ Every single one of the **20 jumper wire connections** is explicitly mapped to p
 
 ## 🌟 Key Interactive 3D Features
 
-- **Crystal-Clear Native 2× Supersampling**: WebGL canvas dynamically sets hardware device pixel ratios up to 3× with `SRGBColorSpace`, completely eliminating texture downscale blurring.
-- **4096 × 2048 Silkscreen Textures**:
-  - High-resolution breadboard silkscreen with black row numbers across center troughs and outer borders, column letters, individual hole guides, and polarity lines.
-  - ESP32-S3 DevKitC-1 silkscreen with colored pin badges matching each circuit net directly on the PCB.
-- **🔌 Interactive Pin Connections Matrix**:
-  - Dedicated search and filtering modal listing all 20 pin connections.
-  - One-click **`🔍 Inspect in 3D`** smoothly flies the camera into a close-up angle centered on the two pins, spawns animated 3D pulsing target beacons (Cyan & Amber) directly in the breadboard holes, dims unrelated wires, and displays an on-screen HUD banner.
-- **SolidWorks-Style Exploded View**: Smoothly elevates all components vertically (0% to 100%) so every wire entry and header pin can be inspected in full assembly clarity.
+- **4 Primary Engineering Viewing Modes**:
+  - **🌐 3D Perspective CAD View**: High-fidelity 3D inspection with OrbitControls, smooth damping, and surface reflection.
+  - **📐 True Orthographic Top View**: Wokwi / KiCad style flat 2D layout with zero parallax distortion, ideal for tracing pin-to-hole alignments.
+  - **📋 Synchronized 2D Circuit Schematic**: Interactive SVG schematic diagram with two-way click synchronization to the 3D circuit.
+  - **⚡ Interactive Signal Flow Architecture**: Visual 6-stage end-to-end signal pipeline from acoustic wave capture to mobile BLE delivery.
+- **Micro-Detailed Physical Hardware Components**:
+  - **ESP32-S3 DevKitC-1**: Authentic gold serpentine Inverted-F PCB antenna trace, dual USB-C connectors (USB OTG + UART), 40MHz quartz crystal oscillator, and red RST / black BOOT switches.
+  - **INMP441 MEMS Microphone**: Purple breakout PCB with ENIG gold acoustic sound port micro-mesh, surface-mount MEMS IC package, SMD 0402 ceramic passives, and gold test points.
+  - **SSD1306 0.96" OLED**: High-contrast 128×64 live HUD framebuffer, amber Kapton flex ribbon cable, and 4 silver solder corner mounting pads.
+  - **5mm Common Cathode RGB LED**: Realistic leadframe anvil & post, 3 microscopic semiconductor dies, cathode flat rim notch, and gracefully splayed lead wires.
+  - **10mm Coin Vibration Motor**: Brushed stainless steel casing with stamped concentric vibration rings, 3M peel-off adhesive tab, and black molded rubber strain relief boot.
+  - **Active Piezo Buzzer**: Black PBT cylindrical body with safety yellow removable wash seal tab (`REMOVE SEAL AFTER WASHING`).
+  - **2N2222 BJT & Diode Clamp**: TO-92 beveled package, 1N4148 fast flyback glass diode, 1kΩ base drive resistor, and bulk 100µF/0.1µF decoupling capacitors.
+  - **MB-102 Breadboard**: 830 tie-point ultra-sharp silkscreen with numbered rows (1 to 63), lettered columns (A-J), red/blue power buses, and nickel-plated double spring clips.
+- **🔍 Dedicated CAD Close-Up Component Framing**: Clicking any component in 3D or in the sidebar automatically frames and magnifies it with optimal lighting and depth-of-field.
+- **🔌 Interactive Pin Connections Matrix & Focus Mode**:
+  - Dedicated search and filtering panel listing all circuit connections.
+  - One-click **`Focus`** dims unrelated wires to 5% opacity and highlights the full electrical pathway with glowing cyan markers.
 - **Animated Electron Current Flow**: Instanced 3D glowing particle streams traverse along each jumper wire curve at physically representative speeds.
-- **Slide-Out Component Details Drawer**: Clicking any component in 3D opens its complete technical specifications, assistive role, and pinout table with "Focus Camera" and "Isolate Circuit" actions.
-- **Split-View Interactive Schematic**: Synchronized 2D SVG engineering schematic that highlights nodes and nets corresponding to the 3D scene.
-- **Cinematic 5-Stage Story Simulator**: Automatically guides users through an educational walkthrough of acoustic sound wave capture, I2S transmission, TinyML classification, haptic actuation, and BLE mobile notification.
+- **SolidWorks-Style Exploded View**: Smoothly elevates all components vertically so every wire entry and header pin can be inspected in full assembly clarity.
 - **Web Audio API Synthesizer**: Built-in sound synthesis generating realistic acoustic tones (3.1 kHz fire siren, two-tone doorbell chime, baby cry harmonics, and dual-tone vehicle horn).
 
 ---
