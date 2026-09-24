@@ -62,9 +62,26 @@ export class VibrationMotor {
     groove.rotation.x = -Math.PI / 2;
     groove.position.y = height + 0.001;
 
-    // Blue peel-off adhesive tab on side/bottom
-    const tabGeo = new THREE.BoxGeometry(0.3, 0.02, 0.4);
-    const tabMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, roughness: 0.5 });
+    // Blue peel-off adhesive tab on side/bottom with 3M branding texture
+    const tabCanvas = document.createElement('canvas');
+    tabCanvas.width = 128;
+    tabCanvas.height = 128;
+    const tCtx = tabCanvas.getContext('2d');
+    tCtx.fillStyle = '#0284c7';
+    tCtx.fillRect(0, 0, 128, 128);
+    tCtx.fillStyle = '#ffffff';
+    tCtx.font = 'bold 36px sans-serif';
+    tCtx.textAlign = 'center';
+    tCtx.fillText('3M', 64, 55);
+    tCtx.fillStyle = '#ef4444';
+    tCtx.font = 'bold 24px sans-serif';
+    tCtx.fillText('▲ PULL', 64, 95);
+
+    const tabTex = new THREE.CanvasTexture(tabCanvas);
+    tabTex.minFilter = THREE.LinearFilter;
+
+    const tabGeo = new THREE.BoxGeometry(0.32, 0.02, 0.42);
+    const tabMat = new THREE.MeshStandardMaterial({ map: tabTex, roughness: 0.5 });
     const tab = new THREE.Mesh(tabGeo, tabMat);
     tab.position.set(radius + 0.1, 0.01, 0);
 
@@ -82,12 +99,20 @@ export class VibrationMotor {
   }
 
   createLeads() {
+    // Molded black strain relief boot on side of motor
+    const bootGeo = new THREE.BoxGeometry(0.12, 0.14, 0.22);
+    const bootMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.8 });
+    const boot = new THREE.Mesh(bootGeo, bootMat);
+    boot.position.set(this.basePosition.x - 0.46, this.basePosition.y + 0.12, this.basePosition.z);
+    this.group.add(boot);
+
     // Flying leads coming out of motor (Red +5V, Black Negative)
     // Red lead goes to row 55 col F, Black lead goes to row 57 col F (Collector of 2N2222)
     const leadMatRed = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.4 });
     const leadMatBlack = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.5 });
 
-    const p1 = new THREE.Vector3(this.basePosition.x - 0.4, this.basePosition.y + 0.1, this.basePosition.z - 0.2);
+    const p1 = new THREE.Vector3(this.basePosition.x - 0.48, this.basePosition.y + 0.12, this.basePosition.z - 0.05);
+    const p1B = new THREE.Vector3(this.basePosition.x - 0.48, this.basePosition.y + 0.12, this.basePosition.z + 0.05);
     const p2Red = this.breadboard.getHolePos({ row: 55, col: 'F' });
     const p2Black = this.breadboard.getHolePos({ row: 57, col: 'F' });
 
@@ -100,16 +125,18 @@ export class VibrationMotor {
     ]);
     const geoRed = new THREE.TubeGeometry(curveRed, 20, 0.035, 8, false);
     const wireRed = new THREE.Mesh(geoRed, leadMatRed);
+    wireRed.castShadow = true;
 
     // Black wire curve
     const curveBlack = new THREE.CatmullRomCurve3([
-      new THREE.Vector3(p1.x - 0.4, p1.y + 0.1, p1.z + 0.1),
-      new THREE.Vector3(p1.x - 0.3, p1.y + 0.3, p1.z + 0.2),
+      p1B,
+      new THREE.Vector3(p1B.x - 0.25, p1B.y + 0.25, p1B.z + 0.15),
       new THREE.Vector3(p2Black.x + 0.1, p2Black.y + 0.2, p2Black.z),
       p2Black
     ]);
     const geoBlack = new THREE.TubeGeometry(curveBlack, 20, 0.035, 8, false);
     const wireBlack = new THREE.Mesh(geoBlack, leadMatBlack);
+    wireBlack.castShadow = true;
 
     this.group.add(wireRed, wireBlack);
   }
