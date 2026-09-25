@@ -5,7 +5,10 @@ export class StorySimulator {
   constructor(app) {
     this.app = app;
     this.isPlaying = false;
+    this.isPaused = false;
+    this.currentStage = 0;
     this.currentTimeout = null;
+    this.soundType = 'fire';
 
     // 3D Sound Wave Visualizer mesh (concentric spheres expanding into microphone)
     this.createSoundWaveMesh();
@@ -41,6 +44,7 @@ export class StorySimulator {
     }
 
     this.isPlaying = true;
+    this.isPaused = false;
     this.soundType = soundType;
 
     const banner = document.getElementById('story-banner');
@@ -49,14 +53,61 @@ export class StorySimulator {
     }
 
     // STAGE 1: Sound Inbound to Microphone (0.0s - 1.8s)
-    this.stage1_AcousticCapture();
+    this.goToStage(1);
+  }
+
+  goToStage(stageNumber) {
+    if (this.currentTimeout) {
+      clearTimeout(this.currentTimeout);
+      this.currentTimeout = null;
+    }
+    this.currentStage = stageNumber;
+    switch (stageNumber) {
+      case 1:
+        this.stage1_AcousticCapture();
+        break;
+      case 2:
+        this.stage2_I2STransmission();
+        break;
+      case 3:
+        this.stage3_TinyMLInference();
+        break;
+      case 4:
+        this.stage4_HapticDriver();
+        break;
+      case 5:
+        this.stage5_MultimodalAlert();
+        break;
+      default:
+        this.finish();
+        break;
+    }
+  }
+
+  pause() {
+    this.isPaused = true;
+    if (this.currentTimeout) {
+      clearTimeout(this.currentTimeout);
+      this.currentTimeout = null;
+    }
+  }
+
+  resume() {
+    if (!this.isPaused) return;
+    this.isPaused = false;
+    this.goToStage(this.currentStage < 5 ? this.currentStage + 1 : 1);
   }
 
   updateBanner(stageNum, title, desc) {
+    this.currentStage = parseInt(stageNum, 10);
     const titleEl = document.getElementById('story-stage-title');
     const descEl = document.getElementById('story-stage-desc');
+    const progressEl = document.getElementById('story-progress');
     if (titleEl) titleEl.textContent = `Stage ${stageNum}/5: ${title}`;
     if (descEl) descEl.textContent = desc;
+    if (progressEl) {
+      progressEl.style.width = `${(parseInt(stageNum, 10) / 5) * 100}%`;
+    }
   }
 
   stage1_AcousticCapture() {
