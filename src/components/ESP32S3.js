@@ -210,24 +210,68 @@ export class ESP32S3 {
     can.receiveShadow = true;
     this.group.add(can);
 
-    // Engraved text on RF shield
+    // Engraved text & QR matrix on RF shield
     const canvas = document.createElement('canvas');
     canvas.width = 1024;
     canvas.height = 1024;
     const ctx = canvas.getContext('2d');
+    
+    // Matte nickel silver RF shield base
     ctx.fillStyle = '#d4d4d8';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 72px monospace';
-    ctx.textAlign = 'center';
-    ctx.fillText('ESP32-S3', 512, 320);
-    ctx.font = 'bold 52px monospace';
-    ctx.fillText('WROOM-1', 512, 410);
+    // Beveled frame line
+    ctx.strokeStyle = '#a1a1aa';
+    ctx.lineWidth = 14;
+    ctx.strokeRect(20, 20, canvas.width - 40, canvas.height - 40);
 
-    ctx.font = '36px monospace';
-    ctx.fillText('FCC ID: 2AC7Z-ESPS3WROOM1', 512, 540);
-    ctx.fillText('CE • RoHS • 16MB FLASH', 512, 610);
+    // Espressif logo placeholder graphic (Stylized stylized E emblem)
+    ctx.fillStyle = '#1e293b';
+    ctx.beginPath();
+    ctx.arc(180, 180, 60, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#d4d4d8';
+    ctx.beginPath();
+    ctx.arc(180, 180, 36, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1e293b';
+    ctx.fillRect(170, 140, 20, 80);
+    ctx.fillRect(170, 140, 50, 20);
+    ctx.fillRect(170, 200, 50, 20);
+
+    // 2D Data Matrix / QR Code stamp
+    ctx.fillStyle = '#0f172a';
+    const qrSize = 140;
+    const qrX = canvas.width - 240;
+    const qrY = 110;
+    ctx.fillRect(qrX, qrY, qrSize, qrSize);
+    ctx.fillStyle = '#d4d4d8';
+    for (let row = 0; row < 7; row++) {
+      for (let col = 0; col < 7; col++) {
+        if ((row + col) % 2 === 0 || (row === 0 || row === 6 || col === 0 || col === 6)) {
+          ctx.fillRect(qrX + col * 20 + 2, qrY + row * 20 + 2, 16, 16);
+        }
+      }
+    }
+
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 78px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('ESP32-S3', 512, 360);
+    ctx.font = 'bold 58px monospace';
+    ctx.fillText('WROOM-1', 512, 450);
+
+    ctx.font = 'bold 34px monospace';
+    ctx.fillStyle = '#334155';
+    ctx.fillText('FCC ID: 2AC7Z-ESPS3WROOM1', 512, 570);
+    ctx.fillText('IC: 21098-ESPS3WROOM1', 512, 630);
+    ctx.fillText('CE • RoHS • 16MB FLASH • 8MB PSRAM', 512, 690);
+
+    // Pin 1 laser mark dot on shield
+    ctx.fillStyle = '#0f172a';
+    ctx.beginPath();
+    ctx.arc(80, 80, 24, 0, Math.PI * 2);
+    ctx.fill();
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -360,48 +404,93 @@ export class ESP32S3 {
     crystal.position.set(0.85, 0.14, 0);
     this.group.add(crystal);
 
-    // BOOT and RESET tactile micro-pushbuttons
+    // BOOT and RESET tactile micro-pushbuttons with metal brackets and SMD solder tabs
     const baseMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.7 });
-    const rstMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.4 }); // Red Reset cap
-    const bootMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.4 }); // Black Boot cap
+    const rstMat = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.35, metalness: 0.2 }); // Red Reset cap
+    const bootMat = new THREE.MeshStandardMaterial({ color: 0x27272a, roughness: 0.35, metalness: 0.2 }); // Black Boot cap
+    const bracketMat = new THREE.MeshStandardMaterial({ color: 0xc4b5fd, roughness: 0.25, metalness: 0.85 }); // Stainless steel bracket
+    const solderTabMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.2, metalness: 0.9 }); // Tinned silver solder pads
 
-    const btnGeo = new THREE.CylinderGeometry(0.09, 0.09, 0.14, 16);
+    const btnGeo = new THREE.CylinderGeometry(0.085, 0.085, 0.12, 16);
     const baseGeo = new THREE.BoxGeometry(0.28, 0.1, 0.25);
+    const bracketGeo = new THREE.BoxGeometry(0.29, 0.04, 0.26);
+    const tabGeo = new THREE.BoxGeometry(0.08, 0.02, 0.06);
 
-    // Reset Button (RST / EN)
-    const rstBase = new THREE.Mesh(baseGeo, baseMat);
-    rstBase.position.set(1.5, 0.12, -0.65);
-    const rstBtn = new THREE.Mesh(btnGeo, rstMat);
-    rstBtn.position.set(1.5, 0.22, -0.65);
-    this.group.add(rstBase, rstBtn);
+    const buttons = [
+      { name: 'RST', x: 1.5, z: -0.65, btnMat: rstMat },
+      { name: 'BOOT', x: 1.5, z: 0.65, btnMat: bootMat }
+    ];
 
-    // Boot Button (BOOT)
-    const bootBase = new THREE.Mesh(baseGeo, baseMat);
-    bootBase.position.set(1.5, 0.12, 0.65);
-    const bootBtn = new THREE.Mesh(btnGeo, bootMat);
-    bootBtn.position.set(1.5, 0.22, 0.65);
-    this.group.add(bootBase, bootBtn);
+    buttons.forEach(b => {
+      // Base plastic body
+      const base = new THREE.Mesh(baseGeo, baseMat);
+      base.position.set(b.x, 0.12, b.z);
+      this.group.add(base);
 
-    // Power Indicator LED (Red)
-    const pwrLedGeo = new THREE.BoxGeometry(0.12, 0.08, 0.08);
+      // Stainless steel retention cover
+      const bracket = new THREE.Mesh(bracketGeo, bracketMat);
+      bracket.position.set(b.x, 0.17, b.z);
+      this.group.add(bracket);
+
+      // Actuator button plunger
+      const btn = new THREE.Mesh(btnGeo, b.btnMat);
+      btn.position.set(b.x, 0.23, b.z);
+      this.group.add(btn);
+
+      // 4x SMD gullwing solder tabs
+      const xOffsets = [-0.16, 0.16];
+      const zOffsets = [-0.12, 0.12];
+      xOffsets.forEach(ox => {
+        zOffsets.forEach(oz => {
+          const tab = new THREE.Mesh(tabGeo, solderTabMat);
+          tab.position.set(b.x + ox, 0.085, b.z + oz);
+          this.group.add(tab);
+        });
+      });
+    });
+
+    // Power Indicator LED (Red SMD 0603)
+    const ledGeo = new THREE.BoxGeometry(0.12, 0.07, 0.08);
     const pwrLedMat = new THREE.MeshStandardMaterial({
       color: 0xff2222,
       emissive: 0xff0000,
-      emissiveIntensity: 0.8,
+      emissiveIntensity: 0.9,
       roughness: 0.2
     });
-    const pwrLed = new THREE.Mesh(pwrLedGeo, pwrLedMat);
+    const pwrLed = new THREE.Mesh(ledGeo, pwrLedMat);
     pwrLed.position.set(1.8, 0.12, -0.6);
     this.group.add(pwrLed);
 
-    // RGB / Status LED (WS2812B or IO indicator)
+    // TX Activity LED (Amber SMD 0603)
+    const txLedMat = new THREE.MeshStandardMaterial({
+      color: 0xf59e0b,
+      emissive: 0xf59e0b,
+      emissiveIntensity: 0.7,
+      roughness: 0.2
+    });
+    const txLed = new THREE.Mesh(ledGeo, txLedMat);
+    txLed.position.set(1.8, 0.12, -0.4);
+    this.group.add(txLed);
+
+    // RX Activity LED (Green SMD 0603)
+    const rxLedMat = new THREE.MeshStandardMaterial({
+      color: 0x10b981,
+      emissive: 0x10b981,
+      emissiveIntensity: 0.7,
+      roughness: 0.2
+    });
+    const rxLed = new THREE.Mesh(ledGeo, rxLedMat);
+    rxLed.position.set(1.8, 0.12, -0.2);
+    this.group.add(rxLed);
+
+    // RGB / TinyML Activity Status LED (Cyan SMD WS2812B)
     const statusLedMat = new THREE.MeshStandardMaterial({
       color: 0x00f0ff,
       emissive: 0x00f0ff,
-      emissiveIntensity: 0.6,
+      emissiveIntensity: 0.7,
       roughness: 0.2
     });
-    const statusLed = new THREE.Mesh(pwrLedGeo, statusLedMat);
+    const statusLed = new THREE.Mesh(ledGeo, statusLedMat);
     statusLed.position.set(1.8, 0.12, 0.6);
     this.group.add(statusLed);
   }
