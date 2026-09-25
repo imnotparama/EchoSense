@@ -68,6 +68,10 @@
           <span>Specs</span>
         </button>
 
+        <button class="icon-button" id="btn-shortcuts-modal" title="Keyboard Shortcuts Cheatsheet (?)">
+          <span>⌨️ Keys</span>
+        </button>
+
         <button class="icon-button" id="btn-clean-view" title="Toggle Clean View (Hide UI Chrome)">
           <span>Clean</span>
         </button>
@@ -498,6 +502,65 @@
           <button class="flow-sim-btn baby" data-alert="baby">👶 Baby Cry (Harmonic)</button>
           <button class="flow-sim-btn horn" data-alert="horn">🚗 Vehicle Horn (Dual-Tone)</button>
           <button class="flow-sim-btn listening" data-alert="reset">🎧 Ambient Listening</button>
+        </div>
+      </div>
+    <!-- Modal: Keyboard Shortcuts Cheatsheet -->
+    <div id="shortcuts-modal" class="modal-backdrop hidden">
+      <div class="modal-card glass-panel" style="max-width: 620px;">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-tag">NAVIGATION & CONTROLS</span>
+            <h2 class="modal-title">Keyboard Shortcuts Cheatsheet</h2>
+          </div>
+          <button class="modal-close-btn" id="shortcuts-close-btn">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="shortcuts-grid">
+            <div class="shortcut-row">
+              <span class="shortcut-desc">3D CAD Perspective View</span>
+              <kbd class="key-badge">1</kbd>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Orthographic Top View (Wokwi Style)</span>
+              <kbd class="key-badge">2</kbd> <span class="shortcut-or">or</span> <kbd class="key-badge">T</kbd>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Interactive Circuit Schematic</span>
+              <kbd class="key-badge">3</kbd>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Signal Flow Architecture Diagram</span>
+              <kbd class="key-badge">4</kbd>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Toggle X-Ray Transparency (Component Shells)</span>
+              <kbd class="key-badge">X</kbd>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Toggle Exploded Assembly View (Vertical Lift)</span>
+              <kbd class="key-badge">E</kbd>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Toggle 3D Pin & Component Labels</span>
+              <kbd class="key-badge">L</kbd>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Toggle Web Audio Sound Effects</span>
+              <kbd class="key-badge">M</kbd>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Trigger Fire Alarm Emergency Simulation</span>
+              <kbd class="key-badge">Space</kbd>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Reset Focus / Close Active Modals</span>
+              <kbd class="key-badge">Esc</kbd>
+            </div>
+            <div class="shortcut-row">
+              <span class="shortcut-desc">Open / Close This Shortcuts Cheatsheet</span>
+              <kbd class="key-badge">?</kbd>
+            </div>
+          </div>
         </div>
       </div>
     </div>

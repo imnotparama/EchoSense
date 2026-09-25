@@ -408,6 +408,95 @@ export class OverlayUI {
         this.modalEl.classList.add('hidden');
       }
     });
+
+    // Keyboard Shortcuts modal
+    const shortcutsModal = document.getElementById('shortcuts-modal');
+    document.getElementById('btn-shortcuts-modal')?.addEventListener('click', () => {
+      shortcutsModal?.classList.toggle('hidden');
+    });
+
+    document.getElementById('shortcuts-close-btn')?.addEventListener('click', () => {
+      shortcutsModal?.classList.add('hidden');
+    });
+
+    shortcutsModal?.addEventListener('click', (e) => {
+      if (e.target === shortcutsModal) {
+        shortcutsModal.classList.add('hidden');
+      }
+    });
+
+    // Global Keyboard Shortcuts
+    window.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+      switch (e.key) {
+        case '1':
+          this.switchMode('3d');
+          break;
+        case '2':
+          this.switchMode('top');
+          break;
+        case '3':
+          this.switchMode('schematic');
+          break;
+        case '4':
+          this.switchMode('flow');
+          break;
+        case 't':
+        case 'T':
+          this.switchMode('top');
+          break;
+        case 'x':
+        case 'X':
+          this.xrayBtn?.click();
+          break;
+        case 'e':
+        case 'E':
+          this.explodeBtn?.click();
+          break;
+        case 'l':
+        case 'L':
+          document.getElementById('btn-labels-toggle')?.click();
+          break;
+        case 'm':
+        case 'M':
+          this.audioBtn?.click();
+          break;
+        case ' ':
+          e.preventDefault();
+          if (this.callbacks.onTriggerAlert) {
+            this.callbacks.onTriggerAlert('fire');
+          }
+          break;
+        case 'Escape':
+          this.closeAllModals();
+          break;
+        case '?':
+          shortcutsModal?.classList.toggle('hidden');
+          break;
+      }
+    });
+  }
+
+  switchMode(mode) {
+    document.querySelectorAll('.mode-tab').forEach(t => {
+      if (t.getAttribute('data-mode') === mode) t.classList.add('active');
+      else t.classList.remove('active');
+    });
+    if (this.callbacks.onModeChange) {
+      this.callbacks.onModeChange(mode);
+    }
+  }
+
+  closeAllModals() {
+    this.modalEl?.classList.add('hidden');
+    document.getElementById('shortcuts-modal')?.classList.add('hidden');
+    if (this.mobileWindow) this.mobileWindow.classList.add('hidden');
+    this.hidePinInspector();
+    this.hideTooltip();
+    if (this.callbacks.onResetInspection) {
+      this.callbacks.onResetInspection();
+    }
   }
 
   setSignalFlowOpen(isOpen) {
