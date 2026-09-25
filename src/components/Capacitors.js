@@ -46,39 +46,43 @@ export class Capacitors {
     };
 
     // Aluminum cylindrical body with black vinyl sleeve
-    const radius = 0.3;
-    const height = 0.75;
-    const bodyGeo = new THREE.CylinderGeometry(radius, radius, height, 20);
+    const radius = 0.28;
+    const height = 0.72;
+    const bodyGeo = new THREE.CylinderGeometry(radius, radius, height, 24);
 
-    // Texture with negative polarity stripe
+    // Texture with negative polarity stripe and manufacturer markings
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
+    canvas.width = 512;
     canvas.height = 256;
     const ctx = canvas.getContext('2d');
 
-    // Black body
-    ctx.fillStyle = '#1e293b';
+    // Deep matte black vinyl body
+    ctx.fillStyle = '#0f172a';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Silver/white negative stripe
-    ctx.fillStyle = '#cbd5e1';
-    ctx.fillRect(180, 0, 50, canvas.height);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.fillRect(360, 0, 90, canvas.height);
 
-    // Minus signs on stripe
-    ctx.fillStyle = '#1e293b';
-    ctx.font = 'bold 36px monospace';
+    // White negative minus [ - ] signs on stripe
+    ctx.fillStyle = '#0f172a';
+    ctx.font = 'bold 44px monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('-', 205, 50);
-    ctx.fillText('-', 205, 110);
-    ctx.fillText('-', 205, 170);
-    ctx.fillText('-', 205, 230);
+    ctx.fillText('-', 405, 55);
+    ctx.fillText('-', 405, 120);
+    ctx.fillText('-', 405, 185);
+    ctx.fillText('-', 405, 245);
 
-    // Value text
+    // Golden / white rating text
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 36px monospace';
+    ctx.fillText('100µF', 180, 90);
+    ctx.font = 'bold 28px monospace';
+    ctx.fillStyle = '#38bdf8';
+    ctx.fillText('16V 105°C', 180, 140);
+    ctx.font = '20px monospace';
     ctx.fillStyle = '#94a3b8';
-    ctx.font = 'bold 22px monospace';
-    ctx.fillText('100µF', 90, 110);
-    ctx.font = '16px monospace';
-    ctx.fillText('16V', 90, 150);
+    ctx.fillText('LOW ESR • PET', 180, 185);
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
@@ -89,35 +93,64 @@ export class Capacitors {
     const bodyMat = new THREE.MeshStandardMaterial({
       map: texture,
       roughness: 0.35,
-      metalness: 0.3
+      metalness: 0.2
     });
 
     const body = new THREE.Mesh(bodyGeo, bodyMat);
     body.castShadow = true;
-    body.position.y = this.breadboard.height + height / 2 + 0.2;
+    body.position.y = this.breadboard.height + height / 2 + 0.16;
 
-    // Aluminum top indent
-    const topGeo = new THREE.CylinderGeometry(radius * 0.9, radius * 0.9, 0.05, 20);
-    const topMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9, roughness: 0.2 });
+    // Bottom molded black rubber seal bung
+    const bungGeo = new THREE.CylinderGeometry(radius * 0.95, radius * 0.95, 0.08, 24);
+    const bungMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.9 });
+    const bung = new THREE.Mesh(bungGeo, bungMat);
+    bung.position.y = body.position.y - height / 2 - 0.03;
+
+    // Aluminum top with stamped 'X' safety pressure relief vent
+    const topGeo = new THREE.CylinderGeometry(radius * 0.92, radius * 0.92, 0.04, 24);
+    const topMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.92, roughness: 0.22 });
     const topCap = new THREE.Mesh(topGeo, topMat);
     topCap.position.y = body.position.y + height / 2 + 0.02;
 
-    // Metal leads (Positive to +top rail, Negative to -top rail)
-    const leadMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9, roughness: 0.1 });
-    const leadGeo = new THREE.CylinderGeometry(0.02, 0.02, 0.4, 8);
+    // Embossed 'X' vent groove
+    const ventMat = new THREE.MeshStandardMaterial({ color: 0x71717a, roughness: 0.5 });
+    const ventLine1 = new THREE.Mesh(new THREE.BoxGeometry(radius * 1.4, 0.045, 0.025), ventMat);
+    const ventLine2 = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.045, radius * 1.4), ventMat);
+    ventLine1.position.y = topCap.position.y + 0.005;
+    ventLine2.position.y = topCap.position.y + 0.005;
 
-    const lead1 = new THREE.Mesh(leadGeo, leadMat);
-    lead1.position.set(0, this.breadboard.height + 0.15, -0.15);
+    // Formed leads plugging into +top and -top power bus rails
+    const leadMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.9, roughness: 0.12 });
+    const railPlusZ = this.breadboard.getRailZ('+top');
+    const railGndZ = this.breadboard.getRailZ('-top');
+    const posZ = (railPlusZ + railGndZ) / 2;
+    const holeY = this.breadboard.height;
+    const relPlusZ = railPlusZ - posZ;
+    const relGndZ = railGndZ - posZ;
 
-    const lead2 = new THREE.Mesh(leadGeo, leadMat);
-    lead2.position.set(0, this.breadboard.height + 0.15, 0.15);
+    // Positive lead (anode -> +top rail)
+    const curvePlus = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, bung.position.y, -0.08),
+      new THREE.Vector3(0, bung.position.y - 0.06, relPlusZ * 0.5),
+      new THREE.Vector3(0, holeY + 0.04, relPlusZ),
+      new THREE.Vector3(0, holeY - 0.22, relPlusZ)
+    ]);
+    const leadPlus = new THREE.Mesh(new THREE.TubeGeometry(curvePlus, 16, 0.016, 8, false), leadMat);
+
+    // Negative lead (cathode -> -top rail)
+    const curveGnd = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0, bung.position.y, 0.08),
+      new THREE.Vector3(0, bung.position.y - 0.06, relGndZ * 0.5),
+      new THREE.Vector3(0, holeY + 0.04, relGndZ),
+      new THREE.Vector3(0, holeY - 0.22, relGndZ)
+    ]);
+    const leadGnd = new THREE.Mesh(new THREE.TubeGeometry(curveGnd, 16, 0.016, 8, false), leadMat);
 
     // Position at row 6, between +top and -top rails
     const posX = this.breadboard.getRowX(6);
-    const posZ = (this.breadboard.getRailZ('+top') + this.breadboard.getRailZ('-top')) / 2;
 
     capGroup.position.set(posX, 0, posZ);
-    capGroup.add(body, topCap, lead1, lead2);
+    capGroup.add(body, bung, topCap, ventLine1, ventLine2, leadPlus, leadGnd);
     this.group.add(capGroup);
   }
 
@@ -138,36 +171,69 @@ export class Capacitors {
       ]
     };
 
-    // Disc body (flattened sphere or cylinder)
-    const discGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.08, 16);
+    const posX = (this.breadboard.getRowX(8) + this.breadboard.getRowX(9)) / 2;
+    const posZ = this.breadboard.getColZ('A');
+    const discY = this.breadboard.height + 0.38;
+
+    // Disc body (flattened disc with stamped text)
+    const discGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.07, 20);
     discGeo.rotateZ(Math.PI / 2);
 
-    // Yellow/amber ceramic color
+    // Stamped 104 marking texture
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#b45309'; // Amber ceramic
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = '#1e293b';
+    ctx.font = 'bold 52px monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('104', 128, 120);
+    ctx.font = 'bold 30px monospace';
+    ctx.fillText('50V Z5U', 128, 175);
+
+    const discTex = new THREE.CanvasTexture(canvas);
+    discTex.colorSpace = THREE.SRGBColorSpace;
+    discTex.generateMipmaps = false;
+    discTex.minFilter = THREE.LinearFilter;
+    discTex.magFilter = THREE.LinearFilter;
+    discTex.anisotropy = 16;
+
     const discMat = new THREE.MeshStandardMaterial({
-      color: 0xd97706, // Amber/Tan ceramic
-      roughness: 0.6,
+      map: discTex,
+      roughness: 0.65,
       metalness: 0.05
     });
 
     const disc = new THREE.Mesh(discGeo, discMat);
     disc.castShadow = true;
-    disc.position.y = this.breadboard.height + 0.45;
+    disc.position.set(0, discY, 0);
 
-    // Leads bent into rows 8 and 9 (Col A)
-    const leadMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.8, roughness: 0.2 });
-    const leadGeo = new THREE.CylinderGeometry(0.018, 0.018, 0.35, 8);
+    // Formed leads dipping down into Row 8 and Row 9 at Column A
+    const leadMat = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, metalness: 0.85, roughness: 0.2 });
+    const row8X = this.breadboard.getRowX(8) - posX;
+    const row9X = this.breadboard.getRowX(9) - posX;
+    const holeY = this.breadboard.height;
 
-    const lead1 = new THREE.Mesh(leadGeo, leadMat);
-    lead1.position.set(-0.12, this.breadboard.height + 0.18, 0);
+    const curve1 = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(-0.06, discY - 0.07, 0),
+      new THREE.Vector3(row8X, discY - 0.14, 0),
+      new THREE.Vector3(row8X, holeY + 0.04, 0),
+      new THREE.Vector3(row8X, holeY - 0.22, 0)
+    ]);
+    const lead1Mesh = new THREE.Mesh(new THREE.TubeGeometry(curve1, 16, 0.015, 8, false), leadMat);
 
-    const lead2 = new THREE.Mesh(leadGeo, leadMat);
-    lead2.position.set(0.12, this.breadboard.height + 0.18, 0);
-
-    const posX = (this.breadboard.getRowX(8) + this.breadboard.getRowX(9)) / 2;
-    const posZ = this.breadboard.getColZ('A');
+    const curve2 = new THREE.CatmullRomCurve3([
+      new THREE.Vector3(0.06, discY - 0.07, 0),
+      new THREE.Vector3(row9X, discY - 0.14, 0),
+      new THREE.Vector3(row9X, holeY + 0.04, 0),
+      new THREE.Vector3(row9X, holeY - 0.22, 0)
+    ]);
+    const lead2Mesh = new THREE.Mesh(new THREE.TubeGeometry(curve2, 16, 0.015, 8, false), leadMat);
 
     capGroup.position.set(posX, 0, posZ);
-    capGroup.add(disc, lead1, lead2);
+    capGroup.add(disc, lead1Mesh, lead2Mesh);
     this.group.add(capGroup);
   }
 }
