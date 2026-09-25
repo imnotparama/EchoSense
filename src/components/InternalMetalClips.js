@@ -14,47 +14,82 @@ export class InternalMetalClips {
   }
 
   init() {
-    // Nickel/brass spring metal material
+    // Authentic Phosphor-Bronze spring alloy with high reflectivity
     const clipMat = new THREE.MeshStandardMaterial({
-      color: 0xd4af37, // Brass / gold-nickel
-      metalness: 0.95,
-      roughness: 0.2,
-      envMapIntensity: 1.5
+      color: 0xcd853f, // Phosphor bronze
+      metalness: 0.92,
+      roughness: 0.22,
+      envMapIntensity: 1.8
     });
 
-    // 1. Terminal Clips (5-pin spring clips running across columns A-E and F-J)
-    // 63 rows * 2 = 126 clips
-    // Clip dimension: length across 5 pins = 4 * pitch + 0.15 = ~1.16cm, width = 0.18cm, height = 0.35cm
-    const clipGeo = new THREE.BoxGeometry(0.18, 0.35, 1.15);
-    const clipMesh = new THREE.InstancedMesh(clipGeo, clipMat, 126);
-    clipMesh.castShadow = false;
-    clipMesh.receiveShadow = true;
-
-    const dummy = new THREE.Object3D();
-    let idx = 0;
-
     const yPos = this.breadboard.height / 2 + 0.05;
+
+    // 1. Terminal Clips: 5-pin dual-leaf spring strips (63 rows * 2 sides = 126 clips)
+    // Base runner strip
+    const baseGeo = new THREE.BoxGeometry(0.12, 0.06, 1.18);
+    const baseMesh = new THREE.InstancedMesh(baseGeo, clipMat, 126);
+    baseMesh.receiveShadow = true;
+
+    // Stamped dual-leaf spring prongs (5 pairs per clip = 10 prongs * 126 = 1260 prongs instanced)
+    const prongGeo = new THREE.BoxGeometry(0.04, 0.28, 0.08);
+    const prongMesh = new THREE.InstancedMesh(prongGeo, clipMat, 126 * 5 * 2);
+    prongMesh.receiveShadow = true;
+
+    const dummyBase = new THREE.Object3D();
+    const dummyProng = new THREE.Object3D();
+    let baseIdx = 0;
+    let prongIdx = 0;
+
+    const colOffsets = [-0.508, -0.254, 0, 0.254, 0.508]; // 5 pin positions spaced 2.54mm (0.254cm)
 
     for (let r = 1; r <= 63; r++) {
       const x = this.breadboard.getRowX(r);
 
-      // Top strip (cols A-E): center Z is (getColZ('A') + getColZ('E')) / 2 = (-1.45 + -0.45)/2 = -0.95
-      dummy.position.set(x, yPos, -0.95);
-      dummy.updateMatrix();
-      clipMesh.setMatrixAt(idx++, dummy.matrix);
+      // Top strip (cols A-E, center Z = -0.95)
+      dummyBase.position.set(x, yPos - 0.12, -0.95);
+      dummyBase.updateMatrix();
+      baseMesh.setMatrixAt(baseIdx++, dummyBase.matrix);
 
-      // Bottom strip (cols F-J): center Z is (getColZ('F') + getColZ('J')) / 2 = (0.45 + 1.45)/2 = 0.95
-      dummy.position.set(x, yPos, 0.95);
-      dummy.updateMatrix();
-      clipMesh.setMatrixAt(idx++, dummy.matrix);
+      colOffsets.forEach(co => {
+        // Left leaf prong
+        dummyProng.position.set(x - 0.04, yPos + 0.02, -0.95 + co);
+        dummyProng.rotation.z = 0.08;
+        dummyProng.updateMatrix();
+        prongMesh.setMatrixAt(prongIdx++, dummyProng.matrix);
+
+        // Right leaf prong
+        dummyProng.position.set(x + 0.04, yPos + 0.02, -0.95 + co);
+        dummyProng.rotation.z = -0.08;
+        dummyProng.updateMatrix();
+        prongMesh.setMatrixAt(prongIdx++, dummyProng.matrix);
+      });
+
+      // Bottom strip (cols F-J, center Z = 0.95)
+      dummyBase.position.set(x, yPos - 0.12, 0.95);
+      dummyBase.updateMatrix();
+      baseMesh.setMatrixAt(baseIdx++, dummyBase.matrix);
+
+      colOffsets.forEach(co => {
+        // Left leaf prong
+        dummyProng.position.set(x - 0.04, yPos + 0.02, 0.95 + co);
+        dummyProng.rotation.z = 0.08;
+        dummyProng.updateMatrix();
+        prongMesh.setMatrixAt(prongIdx++, dummyProng.matrix);
+
+        // Right leaf prong
+        dummyProng.position.set(x + 0.04, yPos + 0.02, 0.95 + co);
+        dummyProng.rotation.z = -0.08;
+        dummyProng.updateMatrix();
+        prongMesh.setMatrixAt(prongIdx++, dummyProng.matrix);
+      });
     }
 
-    clipMesh.instanceMatrix.needsUpdate = true;
-    this.group.add(clipMesh);
+    baseMesh.instanceMatrix.needsUpdate = true;
+    prongMesh.instanceMatrix.needsUpdate = true;
+    this.group.add(baseMesh, prongMesh);
 
-    // 2. Power Rail Continuous Bus Strips (4 long metal rails running along the breadboard)
-    // Length = 15.0cm, width = 0.18cm, height = 0.35cm
-    const railBusGeo = new THREE.BoxGeometry(this.breadboard.length - 1.2, 0.35, 0.18);
+    // 2. Power Rail Continuous Bus Strips with stamped contact dimples
+    const railBusGeo = new THREE.BoxGeometry(this.breadboard.length - 1.2, 0.22, 0.14);
     const rails = [
       this.breadboard.getRailZ('+top'), // -2.3
       this.breadboard.getRailZ('-top'), // -2.0
@@ -64,7 +99,7 @@ export class InternalMetalClips {
 
     rails.forEach(z => {
       const railMesh = new THREE.Mesh(railBusGeo, clipMat);
-      railMesh.position.set(0, yPos, z);
+      railMesh.position.set(0, yPos - 0.04, z);
       this.group.add(railMesh);
     });
   }
