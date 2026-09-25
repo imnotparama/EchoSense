@@ -625,14 +625,23 @@ export class WireManager {
 
     const bootMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5 });
     const pinMat = new THREE.MeshStandardMaterial({ color: 0xe4e4e7, metalness: 0.95, roughness: 0.15 });
+    const collarMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.85, roughness: 0.25 });
 
-    // Sturdy square terminal collar for clear insertion visibility
+    // Sturdy square DuPont terminal housing with metallic crimp collar
     const bootGeo = new THREE.BoxGeometry(0.16, 0.38, 0.16);
+    const collarGeo = new THREE.CylinderGeometry(0.065, 0.065, 0.06, 12);
+
     const bootStart = new THREE.Mesh(bootGeo, bootMat);
     bootStart.position.set(pStart.x, pStart.y + 0.19, pStart.z);
+    const collarStart = new THREE.Mesh(collarGeo, collarMat);
+    collarStart.position.set(0, 0.19, 0);
+    bootStart.add(collarStart);
 
     const bootEnd = new THREE.Mesh(bootGeo, bootMat);
     bootEnd.position.set(pEnd.x, pEnd.y + 0.19, pEnd.z);
+    const collarEnd = new THREE.Mesh(collarGeo, collarMat);
+    collarEnd.position.set(0, 0.19, 0);
+    bootEnd.add(collarEnd);
 
     // Shiny nickel-plated pin entering hole
     const pinGeo = new THREE.CylinderGeometry(0.025, 0.025, 0.24, 10);

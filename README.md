@@ -128,8 +128,29 @@ Every single one of the **20 jumper wire connections** is explicitly mapped to p
   - Dedicated search and filtering panel listing all circuit connections.
   - One-click **`Focus`** dims unrelated wires to 5% opacity and highlights the full electrical pathway with glowing cyan markers.
 - **Animated Electron Current Flow**: Instanced 3D glowing particle streams traverse along each jumper wire curve at physically representative speeds.
+- **DuPont Terminal Ferrules**: Molded wire boots with metallic crimp collars and strain-relief collars.
 - **SolidWorks-Style Exploded View**: Smoothly elevates all components vertically so every wire entry and header pin can be inspected in full assembly clarity.
-- **Web Audio API Synthesizer**: Built-in sound synthesis generating realistic acoustic tones (3.1 kHz fire siren, two-tone doorbell chime, baby cry harmonics, and dual-tone vehicle horn).
+- **Web Audio API Studio Synthesizer**: Built-in sound synthesis with dynamics limiter, resonant biquad filtering (smoke siren, doorbell, cry formant, horn), and sub-bass haptic rumble simulation.
+- **Vector SVG Schematic Pan/Zoom & Export**: Pan, zoom, and download vector schematics directly to `.svg` for lab reports and project presentations.
+- **Dynamic Companion Smartphone Screen**: Real-time 24-bar audio spectrogram waveform display, haptic pulse vibration, and glassmorphic push notification cards.
+
+---
+
+## ⌨️ Keyboard Shortcuts
+
+| Key | Action | Description |
+|:---:|:---|:---|
+| <kbd>1</kbd> | **3D View** | Switch to Interactive 3D Perspective CAD View |
+| <kbd>2</kbd> or <kbd>T</kbd> | **Top View** | Switch to True Orthographic 2D Top View (Wokwi Style) |
+| <kbd>3</kbd> | **Schematic** | Open Synchronized 2D Vector Circuit Schematic |
+| <kbd>4</kbd> | **Signal Flow** | Open 6-Stage End-to-End Signal Propagation Diagram |
+| <kbd>X</kbd> | **X-Ray Mode** | Toggle component shell transparency & phosphor-bronze spring clips |
+| <kbd>E</kbd> | **Explode View** | Toggle vertical assembly elevation (lift components) |
+| <kbd>L</kbd> | **Labels** | Toggle 3D component and pin callout badges |
+| <kbd>M</kbd> | **Mute Audio** | Toggle Web Audio sound effects and haptic rumble |
+| <kbd>Space</kbd> | **Fire Alarm** | Trigger emergency smoke alarm simulation cycle |
+| <kbd>Esc</kbd> | **Reset / Close** | Reset camera focus and dismiss active modals |
+| <kbd>?</kbd> | **Cheatsheet** | Toggle Keyboard Shortcuts Cheatsheet modal |
 
 ---
 
