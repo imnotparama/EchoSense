@@ -91,10 +91,31 @@ export class PhoneCompanion {
     body.receiveShadow = true;
     this.group.add(body);
 
-    // Camera island on back (for realism when viewed from below/behind)
+    // Camera island on back with dual lenses, LiDAR sensor, and dual-tone LED flash
     const camIslandGeo = new THREE.BoxGeometry(1.6, 0.1, 1.8);
     const camIsland = new THREE.Mesh(camIslandGeo, frameMat);
     camIsland.position.set(-0.9, -this.thickness / 2 - 0.05, -2.5);
+
+    const lensGeo = new THREE.CylinderGeometry(0.35, 0.35, 0.06, 24);
+    const lensRingGeo = new THREE.CylinderGeometry(0.38, 0.38, 0.05, 24);
+    const ringMat = new THREE.MeshStandardMaterial({ color: 0x64748b, metalness: 0.9, roughness: 0.2 });
+    const lensGlassMat = new THREE.MeshPhysicalMaterial({ color: 0x050510, roughness: 0.1, metalness: 0.8, clearcoat: 1.0 });
+
+    [0.45, -0.45].forEach(zOffset => {
+      const ring = new THREE.Mesh(lensRingGeo, ringMat);
+      ring.position.set(-0.35, -0.06, zOffset);
+      const glass = new THREE.Mesh(lensGeo, lensGlassMat);
+      glass.position.set(-0.35, -0.07, zOffset);
+      camIsland.add(ring, glass);
+    });
+
+    // Flash LED
+    const flashGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.04, 16);
+    const flashMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfef08a, emissiveIntensity: 0.5 });
+    const flash = new THREE.Mesh(flashGeo, flashMat);
+    flash.position.set(0.4, -0.06, -0.4);
+    camIsland.add(flash);
+
     this.group.add(camIsland);
   }
 
@@ -128,6 +149,8 @@ export class PhoneCompanion {
     screen.position.y = this.thickness / 2 + 0.045;
     this.group.add(screen);
 
+    this.animTime = 0;
+    this.lastDrawTime = 0;
     this.drawScreen();
   }
 
@@ -211,6 +234,49 @@ export class PhoneCompanion {
     ctx.fillStyle = '#34d399';
     ctx.font = 'bold 16px monospace';
     ctx.fillText('● BLE CONNECTED • ECHOSENSE', w / 2, 321);
+
+    // Live Audio Spectrogram Waveform (Real-time ambient visualizer)
+    const waveY = 680;
+    const waveW = w - 80;
+    const waveX = 40;
+    ctx.fillStyle = 'rgba(15, 23, 42, 0.6)';
+    ctx.beginPath();
+    ctx.roundRect(waveX, waveY - 45, waveW, 90, 16);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(56, 189, 248, 0.3)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    // 24 animated FFT bars
+    const t = this.animTime || 0;
+    const numBars = 24;
+    const barWidth = 8;
+    const barSpacing = (waveW - 40) / numBars;
+    for (let i = 0; i < numBars; i++) {
+      const freqMultiplier = this.activeNotification ? 3.5 : 1.2;
+      const barH = 10 + Math.abs(Math.sin(t * 3 + i * 0.4) * Math.cos(t * 2 + i * 0.2)) * 32 * freqMultiplier;
+      const bx = waveX + 20 + i * barSpacing;
+      const by = waveY + 20 - barH;
+
+      const barGrad = ctx.createLinearGradient(0, by, 0, waveY + 20);
+      if (this.activeNotification) {
+        barGrad.addColorStop(0, '#ef4444');
+        barGrad.addColorStop(1, '#f59e0b');
+      } else {
+        barGrad.addColorStop(0, '#38bdf8');
+        barGrad.addColorStop(1, '#0284c7');
+      }
+      ctx.fillStyle = barGrad;
+      ctx.beginPath();
+      ctx.roundRect(bx, by, barWidth, barH, 4);
+      ctx.fill();
+    }
+
+    // Audio status label
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = 'bold 13px monospace';
+    ctx.fillText('I2S 16kHz MEMS STREAM', waveX + 16, waveY - 22);
 
     // Push Notification Card (if active)
     if (this.activeNotification) {
@@ -316,11 +382,19 @@ export class PhoneCompanion {
   }
 
   update(deltaTime) {
+    this.animTime = (this.animTime || 0) + deltaTime;
+
     if (this.screenOn && this.glowIntensity > 0.4) {
       this.glowIntensity = Math.max(0.4, this.glowIntensity - deltaTime * 0.5);
       if (this.screenMaterial) {
         this.screenMaterial.emissiveIntensity = this.glowIntensity;
       }
+    }
+
+    // Periodic redraw for dynamic audio waveform (15 fps)
+    if (this.animTime - this.lastDrawTime > 0.066) {
+      this.lastDrawTime = this.animTime;
+      this.drawScreen();
     }
 
     // 3D mechanical vibration oscillation on desk
